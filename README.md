@@ -6,7 +6,7 @@ Develop a messaging app that allows users to send messages to each other through
 
 ## Team Members
 - [Member 1] Sebastian Bulgac | Id: 40274961 | Github Username: Sebastian6547
-- [Member 2] 
+- [Member 2] Minh Huy Tran	  | Id: 40263743 | Github Username: ValvatorezBraveheart
 - [Member 3]
 - [Member 4]
 - [Member 5]
