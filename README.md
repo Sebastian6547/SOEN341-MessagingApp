@@ -10,9 +10,9 @@ Develop a messaging app that allows users to send messages to each other through
 - [Member 3]
 - [Member 4]
 - [Member 5]
-- [Member 6]
+- [Member 6] Maximilian Grabowski | Id:40251210 | Github username: MaxGrabs
 
 ## Technologies
 - Frontend: React
 - Backend: Java Spring Boot
-- Database: MySQL
+- Database: Firebase, because it's hosted for free and should be enough for our goals.
