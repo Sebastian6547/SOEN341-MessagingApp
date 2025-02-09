@@ -22,6 +22,8 @@ public class AuthController {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
+        System.out.println("Received login request: " + username + " | " + password);
+
         if (authService.authenticateUser(username, password, session)) {
             return ResponseEntity.ok(Map.of("message", "Login successful"));
         } else {
