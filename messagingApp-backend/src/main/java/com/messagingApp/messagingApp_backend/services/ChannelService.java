@@ -83,4 +83,9 @@ public class ChannelService {
         }
         return null;
     }
+
+    // Send a message to a channel
+    public void sendMessage(String channelName, String content, String sender) {
+        // This method would typically save the message to a database
+    }
 }

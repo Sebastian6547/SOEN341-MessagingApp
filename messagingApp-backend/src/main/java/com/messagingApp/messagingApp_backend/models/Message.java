@@ -16,4 +16,24 @@ public class Message {
         this.channel = channel;
         this.timestamp = timestamp;
     }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
 }

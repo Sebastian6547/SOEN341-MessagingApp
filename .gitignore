@@ -30,6 +30,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+messagingApp-backend/target/
+messagingApp-backend/.mvn/
+messagingApp-backend/mvnw
+messagingApp-backend/mvnw.cmd
+
 ### STS ###
 .apt_generated
 .classpath
@@ -57,3 +62,29 @@ build/
 
 ### VS Code ###
 .vscode/
+
+######################
+
+# dependencies
+frontend/node_modules
+frontend/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+frontend/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+*./.env
