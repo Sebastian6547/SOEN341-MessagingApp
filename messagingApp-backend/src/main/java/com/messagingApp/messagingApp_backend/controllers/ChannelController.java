@@ -5,6 +5,7 @@ import com.messagingApp.messagingApp_backend.models.Message;
 import com.messagingApp.messagingApp_backend.models.User;
 import com.messagingApp.messagingApp_backend.services.AuthService;
 import com.messagingApp.messagingApp_backend.services.ChannelService;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class ChannelController {
         if (username == null) {
             return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
         }
-
+        System.out.println("REQUEST by User: " + username+ " for channel: " + channelName);
         //Check if the user is a member of the channel
         List<Channel> userChannels = channelService.getUserChannels(username);
         boolean isMember = userChannels.stream().anyMatch(channel -> channel.getName().equals(channelName));
@@ -69,6 +70,8 @@ public class ChannelController {
 
         //Send message
         channelService.sendMessage(channelName, messageData.get("content"), username);
+        // Simulate storing message (in real case, insert into DB)
+        System.out.println("Message sent to " + channelName + ": " + messageData.get("content"));
 
         return ResponseEntity.ok(Map.of("message", "Message sent successfully"));
     }

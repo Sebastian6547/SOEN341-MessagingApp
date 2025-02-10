@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import "../styles/LoginPage.css";
 
 const LoginPage = () => {
     const [username, setUsername] = useState(""); // Create a state variable to store the username

@@ -18,7 +18,7 @@ public class ChannelService {
     public List<Channel> getAllChannels() {
         return Arrays.asList(
                 new Channel("General", Channel.ChannelType.PC),
-                new Channel("Project Help", Channel.ChannelType.PC),
+                new Channel("Project_Help", Channel.ChannelType.PC),
                 new Channel("Social", Channel.ChannelType.PC),
                 new Channel("Alice_Bob_DM", Channel.ChannelType.DM) // Direct message channel
         );
@@ -29,7 +29,7 @@ public class ChannelService {
         if (username.equals("Alice")) {
             return Arrays.asList(
                     new Channel("General", Channel.ChannelType.PC),
-                    new Channel("Project Help", Channel.ChannelType.PC)
+                    new Channel("Project_Help", Channel.ChannelType.PC)
             );
         } else if (username.equals("Bob")) {
             return Arrays.asList(
@@ -48,7 +48,7 @@ public class ChannelService {
                     new User("Bob", "password456", User.UserRole.MEMBER),
                     new User("Charlie", "password789", User.UserRole.ADMIN)
             );
-        } else if (channelName.equals("Project Help")) {
+        } else if (channelName.equals("Project_Help")) {
             return Arrays.asList(
                     new User("Alice", "password123", User.UserRole.MEMBER),
                     new User("David", "password999", User.UserRole.ADMIN)
@@ -65,9 +65,9 @@ public class ChannelService {
                     new Message(2L, "Hi Alice!", new User("Bob", "password456", User.UserRole.MEMBER), new Channel("General", Channel.ChannelType.PC), LocalDateTime.now().minusMinutes(3)),
                     new Message(3L, "Welcome to the chat!", new User("Charlie", "password789", User.UserRole.ADMIN), new Channel("General", Channel.ChannelType.PC), LocalDateTime.now().minusMinutes(1))
             );
-        } else if (channelName.equals("Project Help")) {
+        } else if (channelName.equals("Project_Help")) {
             return Arrays.asList(
-                    new Message(4L, "Need help with Spring Boot?", new User("David", "password999", User.UserRole.ADMIN), new Channel("Project Help", Channel.ChannelType.PC), LocalDateTime.now().minusMinutes(2))
+                    new Message(4L, "Need help with Spring Boot?", new User("David", "password999", User.UserRole.ADMIN), new Channel("Project_Help", Channel.ChannelType.PC), LocalDateTime.now().minusMinutes(2))
             );
         }
         return Arrays.asList();
