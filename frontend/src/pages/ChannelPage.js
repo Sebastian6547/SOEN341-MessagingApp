@@ -1,10 +1,11 @@
 import React, { useState,useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "../styles/ChannelPage.css";
 
 const ChannelPage = () => {
-    const { channelName } = useParams();
+    const { channelName: rawChannelName } = useParams();
+    const channelName = rawChannelName.replace(/_/g, " "); // Replace underscores with spaces for display
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [users, setUsers] = useState([]);
@@ -17,11 +18,11 @@ const ChannelPage = () => {
         // Poll for new messages every 5 seconds
         const interval = setInterval(getChannelData, 5000);
         return () => clearInterval(interval); // Cleanup on unmount
-    }, [channelName]);
+    }, [rawChannelName]);
 
     const getChannelData = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/channel/${channelName}`, { withCredentials: true });
+            const response = await axios.get(`http://localhost:8080/api/channel/${rawChannelName}`, { withCredentials: true });
             setMessages(response.data.messages);
             setUsers(response.data.users);
             setChannels(response.data.channels);
@@ -39,7 +40,7 @@ const ChannelPage = () => {
         if (newMessage.trim() === "") return; // Don't send empty messages
         console.log(newMessage);
         try {
-            await axios.post(`http://localhost:8080/api/channel/${channelName}/sendMessage`, {
+            await axios.post(`http://localhost:8080/api/channel/${rawChannelName}/sendMessage`, {
                 content: newMessage
             }, { withCredentials: true });
             setNewMessage(""); // Clear the input after sending
@@ -49,17 +50,23 @@ const ChannelPage = () => {
         }
     }
 
+
+
     
 
     return (
         <div className="channel-page">
         <div className="sidebar">
             <h3>Channels</h3>
-            <ul>
-                {channels.map((ch, index) => (
-                    <li key={index}>{ch.name}</li>
-                ))}
-            </ul>
+                <ul>
+                    {channels.map((ch, index) => (
+                        <li key={index}>
+                            <Link to={`/channel/${ch.name}`} className="channel-button">
+                                {ch.name.replace(/_/g, " ")} {/* Replace underscores with spaces */}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
         </div>
 
         <div className="chat-container">
@@ -84,9 +91,9 @@ const ChannelPage = () => {
 
         <div className="sidebar">
             <h3>Users</h3>
-            <ul>
+            <ul className="users-list">
                 {users.map((user, index) => (
-                    <li key={index}>{user.username}</li>
+                    <li class="user-item" key={index}>{user.username}</li>
                 ))}
             </ul>
         </div>
