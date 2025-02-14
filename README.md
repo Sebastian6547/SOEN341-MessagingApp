@@ -29,4 +29,4 @@ Develop a messaging app that allows users to send messages to each other through
 
 - Frontend: React
 - Backend: Java Spring Boot
-- Database: Firebase, because it's hosted for free and should be enough for our goals.
+- Database: PostgreSQL(RDBMS) hosted on Supabase 
