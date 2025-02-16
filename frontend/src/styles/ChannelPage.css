@@ -1,84 +1,286 @@
-.channel-page {
-    display: flex;
-    height: 100vh;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.sidebar {
-    width: 200px;
-    background-color: #f0f0f0;
-    padding: 10px;
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
-.chat-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
+button {
+  cursor: pointer;
 }
 
-.messages-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 10px;
-    background-color: #f9f9f9;
+.App {
+  display: flex;
+  background-color: #f0f0f0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
-.message {
-    padding: 5px;
-    margin-bottom: 5px;
-    background-color: #e1f5fe;
-    border-radius: 5px;
+.channels {
+  height: 80%;
+  width: 14rem;
+  background-color: rgb(145, 145, 145);
+  display: flex;
+  flex-direction: column;
+  margin-top: 2%;
+  border-radius: 0 30px 30px 0;
+  align-items: center;
+  border: #7c7c7c 0.3rem solid;
+  border-width: 0.3rem 0.3rem 0.3rem 0rem;
 }
 
-.input-container {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
+.channels-logo {
+  height: 3.5rem;
+  width: fit-content;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  margin: 8% 0 8% 0;
+  padding: 2% 3% 2% 3%;
+  background-color: rgb(255, 255, 255);
 }
 
-input {
-    flex: 1;
-    padding: 10px;
-}
-
-.input-container button {
-    flex: 0; /* Prevent button from stretching */
-    width: 100px; /* Set a fixed width */
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
+.channel-list {
+  width: 100%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(145, 145, 145);
+  list-style-type: none;
+  margin: 0;
+  padding-top: 10px;
+  border-radius: 0 0 30px 0;
+  overflow-y: auto;
 }
 
 .channel-button {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    text-align: center;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    margin-bottom: 5px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 80%;
+  height: 3rem;
+  text-align: center;
+  background-color: white;
+  text-decoration: none;
+  margin-bottom: 10px;
+  border-radius: 0 50px 50px 0;
+  padding-left: 1rem;
 }
 
-.channel-button:hover {
-    background-color: #0056b3;
+.button {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  border-radius: 0 50px 50px 0;
+  border: none;
+  font-size: 1.2rem;
+  text-align: center;
+  color: black;
+  text-decoration: none;
+  padding-left: 0;
 }
 
-.sidebar ul {
-    list-style: none; 
-    padding: 0;
-    margin-right: 10%; 
-    text-align: left; 
+.channel-button-active {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 85%;
+  height: 3.5rem;
+  text-align: center;
+  background-color: #34a3e4;
+  text-decoration: none;
+  margin-bottom: 10px;
+  border-radius: 0 50px 50px 0;
+  padding-left: 2rem;
 }
 
-.user-item{
-    padding: 2px 4px;
-    margin: 2px;
-    border: 1px solid black;
-    border-radius: 10px;
+.button-active {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  border-radius: 0 50px 50px 0;
+  border: none;
+  background-color: #34a3e4;
+  font-size: 1.3rem;
+  text-align: center;
+  padding-left: 0;
+}
+
+.new-button {
+  height: 100%;
+  width: 100%;
+  border-radius: 0 50px 50px 0;
+  background-color: #5a5a5a;
+  border: none;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.channel {
+  z-index: 1;
+  height: 93%;
+  width: 80%;
+  display: block;
+  margin: 7vh 1% 0% 1%;
+  border-radius: 50px 50px 0 0;
+}
+
+.channel-logo {
+  height: 5rem;
+  width: 100%;
+  border-radius: 50px 50px 0 0;
+  padding-left: 5%;
+  display: flex;
+  align-items: center;
+  background-color: rgb(80, 80, 80);
+  color: white;
+}
+
+.message-container {
+  height: calc(100% - 10rem);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #7c7c7c;
+  overflow-y: auto;
+  padding-bottom: 1%;
+}
+
+.message {
+  height: fit-content;
+  min-height: 3.5rem;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  margin: 10px 10px 10px 5%;
+  padding: 10px 10px 10px 15px;
+  background-color: #f0f0f0;
+  border-radius: 30px;
+  text-align: left;
+}
+
+.input-box {
+  height: 5rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #6d6d6d;
+}
+
+.message-input {
+  height: 60%;
+  width: 70%;
+  border-radius: 30px;
+  padding: 0 10px;
+  border: none;
+}
+
+.send-button {
+  height: 60%;
+  width: 60px;
+  margin: 0px 10px 0px 10px;
+  background-color: #34a3e4;
+  border-radius: 30px;
+  border: none;
+}
+
+.members {
+  height: 92%;
+  width: 15rem;
+  background-color: rgb(145, 145, 145);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 2%;
+  border-radius: 30px 0 0 30px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  border: #7c7c7c 0.3rem solid;
+  border-width: 0.3rem 0rem 0.3rem 0.3rem;
+}
+
+.members-inactive {
+  transform: translateX(13rem);
+}
+
+.members-logo {
+  height: 4.5rem;
+  width: 100%;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8%;
+}
+
+.members-logo-img {
+  height: 95%;
+  cursor: pointer;
+}
+
+.members-logo-img-inactive {
+  transform: translateX(-2rem);
+  height: 100%;
+  border: #7c7c7c 0.3rem solid;
+  border-radius: 50%;
+}
+
+.members-logo-img-inactive:hover {
+  transform: translateX(-3rem);
+}
+
+.members-logo-txt {
+  height: 2rem;
+  width: 80%;
+  position: absolute;
+  left: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: -1;
+  background-color: white;
+  border-radius: 50px;
+  padding-left: 15%;
+  font-weight: bold;
+}
+.members-logo-txt-inactive {
+  transform: translatex(-2rem);
+}
+
+.member-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.member-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 2rem;
+  background-color: #5a5a5a;
+  color: white;
+  text-decoration: none;
+  border-radius: 50px;
+  margin-bottom: 5px;
+}
+
+.member-button-inactive {
+  display: none;
 }
