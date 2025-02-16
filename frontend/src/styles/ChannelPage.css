@@ -88,6 +88,7 @@ button {
   color: black;
   text-decoration: none;
   padding-left: 0;
+  background-color: white;
 }
 
 .channel-button-active {
@@ -126,6 +127,11 @@ button {
   border: none;
   font-size: 1.2rem;
   color: white;
+}
+
+.new-button:hover {
+  background-color: #7c7c7c;
+  transform: scale(1.15);
 }
 
 .channel {
@@ -238,9 +244,29 @@ button {
   border: #7c7c7c 0.3rem solid;
   border-radius: 50%;
 }
+@keyframes grow {
+  0% {
+    transform: scale(1) translateX(-2rem);
+  }
+  100% {
+    transform: scale(1.01) translateX(-2.5rem);
+  }
+}
+@keyframes shrink {
+  0% {
+    transform: scale(1.01) translateX(-2.5rem);
+  }
+  100% {
+    transform: scale(1) translateX(-2rem);
+  }
+}
 
 .members-logo-img-inactive:hover {
-  transform: translateX(-3rem);
+  animation: grow 1s forwards;
+}
+
+.members-logo-img {
+  animation: shrink 0.3s forwards;
 }
 
 .members-logo-txt {

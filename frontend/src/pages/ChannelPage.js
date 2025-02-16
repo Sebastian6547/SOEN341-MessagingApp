@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/ChannelPage.css";
 
@@ -30,7 +30,7 @@ const ChannelPage = () => {
       setMessages(response.data.messages);
       setUsers(response.data.users);
       setChannels(response.data.channels);
-      //console.log(response.data);
+      console.log(response.data, "channelName: " + channelName);
     } catch (err) {
       console.error("Error fetching channel data:", err);
       if (err.response && err.response.status === 403) {
@@ -42,7 +42,7 @@ const ChannelPage = () => {
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return; // Don't send empty messages
-    console.log(newMessage);
+    console.log("Sent message:", newMessage);
     try {
       await axios.post(
         `http://localhost:8080/api/channel/${rawChannelName}/sendMessage`,
@@ -58,32 +58,32 @@ const ChannelPage = () => {
     }
   };
 
-  const [activeChannel, setActiveChannel] = React.useState("General");
   return (
     <div className="App">
       <Channels
-        activeChannel={activeChannel}
-        setActiveChannel={setActiveChannel}
         channels={channels}
+        channelName={channelName}
+        getChannelData={getChannelData}
       />
       <Channel
-        activeChannel={activeChannel}
         messages={messages}
         newMessage={newMessage}
         setNewMessage={setNewMessage}
+        handleSendMessage={handleSendMessage}
+        channelName={channelName}
       />
-      <Members activeChannel={activeChannel} users={users} />
+      <Members channelName={channelName} users={users} />
     </div>
   );
 };
 
-function Channels({ activeChannel, setActiveChannel, channels }) {
+function Channels({ channelName, channels, getChannelData }) {
   return (
     <div className="channels">
       <ChannelsLogo />
       <ChannelList
-        activeChannel={activeChannel}
-        setActiveChannel={setActiveChannel}
+        getChannelData={getChannelData}
+        channelName={channelName}
         channels={channels}
       />
     </div>
@@ -98,14 +98,14 @@ function ChannelsLogo() {
   );
 }
 
-function ChannelList({ activeChannel, setActiveChannel, channels }) {
+function ChannelList({ channelName, channels, getChannelData }) {
   return (
     <ul className="channel-list">
       {channels.map((channel, index) => (
         <ChannelButton
-          activeChannel={activeChannel}
-          setActiveChannel={setActiveChannel}
-          key={index}
+          channelName={channelName}
+          getChannelData={getChannelData}
+          channelKey={index}
           channel={channel}
         />
       ))}
@@ -114,29 +114,34 @@ function ChannelList({ activeChannel, setActiveChannel, channels }) {
   );
 }
 
-function ChannelButton(props) {
+function ChannelButton({ channelName, getChannelData, channelKey, channel }) {
+  const navigate = useNavigate();
   return (
     <li
       className={
-        props.activeChannel === props.channel.name
+        channelName === channel.name.replace(/_/g, " ")
           ? "channel-button channel-button-active"
           : "channel-button"
       }
-      key={props.key}
+      key={channelKey}
     >
-      <Link
-        to={`/channel/${props.channel.name}`}
+      <button
         className={
-          props.activeChannel === props.channel
+          channelName === channel.name.replace(/_/g, " ")
             ? "button button-active"
             : "button"
         }
         style={{ fontWeight: "bold" }}
-        onClick={() => props.setActiveChannel(props.channel.name)}
+        onClick={() => {
+          console.log(
+            `Navigating to channel: ${channel.name} (channelName: ${channelName})`
+          );
+          navigate(`/channel/${channel.name}`);
+        }}
       >
-        {props.channel.name.replace(/_/g, " ")}{" "}
+        {channel.name.replace(/_/g, " ")}
         {/* Replace underscores with spaces */}
-      </Link>
+      </button>
     </li>
   );
 }
@@ -149,30 +154,40 @@ function NewChannelButton() {
   );
 }
 
-function Channel({ activeChannel, messages, newMessage, setNewMessage }) {
+function Channel({
+  messages,
+  newMessage,
+  setNewMessage,
+  handleSendMessage,
+  channelName,
+}) {
   return (
     <div className="channel">
-      <ChannelLogo activeChannel={activeChannel} />
-      <Messages activeChannel={activeChannel} messages={messages} />
-      <InputBox newMessage={newMessage} setNewMessage={setNewMessage} />
+      <ChannelLogo channelName={channelName} />
+      <Messages messages={messages} channelName={channelName} />
+      <InputBox
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        handleSendMessage={handleSendMessage}
+      />
     </div>
   );
 }
 
-function ChannelLogo({ activeChannel }) {
+function ChannelLogo({ channelName }) {
   return (
     <div className="channel-logo">
-      <h1>{activeChannel}</h1>
+      <h1>{channelName}</h1>
     </div>
   );
 }
 
-function Messages({ activeChannel, messages }) {
+function Messages({ messages, channelName }) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeChannel]);
+  }, [channelName]);
 
   return (
     <div className="message-container">
@@ -200,7 +215,7 @@ function Message(props) {
   );
 }
 
-function InputBox({ newMessage, setNewMessage }) {
+function InputBox({ newMessage, setNewMessage, handleSendMessage }) {
   return (
     <div className="input-box">
       <input
@@ -209,18 +224,21 @@ function InputBox({ newMessage, setNewMessage }) {
         placeholder="Type a message..."
         value={newMessage}
         onChange={(e) => setNewMessage(e.target.value)}
+        onSubmit={() => handleSendMessage()}
       />
-      <button className="send-button">Send</button>
+      <button className="send-button" onClick={() => handleSendMessage()}>
+        Send
+      </button>
     </div>
   );
 }
 
-function Members({ activeChannel, users }) {
+function Members({ channelName, users }) {
   const [active, setActive] = React.useState(false);
   return (
     <div className={active ? "members" : "members members-inactive"}>
       <MembersLogo active={active} setActive={setActive} />
-      <MemberList active={active} activeChannel={activeChannel} users={users} />
+      <MemberList active={active} activeChannel={channelName} users={users} />
     </div>
   );
 }
@@ -254,7 +272,7 @@ function MembersLogo({ active, setActive }) {
   );
 }
 
-function MemberList({ active, activeChannel, users }) {
+function MemberList({ active, users }) {
   return (
     <ul className="member-list">
       {users.map((member, index) => (
@@ -277,7 +295,6 @@ function MemberButton(props) {
         style={{
           borderRadius: "50px",
           paddingLeft: "0.5rem",
-          backgroundColor: "white",
         }}
       >
         {props.member.username}
