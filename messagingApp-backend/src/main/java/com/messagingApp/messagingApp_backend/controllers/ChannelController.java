@@ -102,4 +102,18 @@ public class ChannelController {
 
         return ResponseEntity.ok(latestMessage);
     }
+
+    // Get all users (used for user search to create DMs with any user)
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers(HttpSession session) {
+        //Check user is logged in
+        String username = authService.getLoggedInUser(session);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+        }
+
+        //Get all users
+        List<User> users = channelService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
 }
