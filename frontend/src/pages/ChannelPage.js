@@ -208,7 +208,7 @@ function Message(props) {
   return (
     <div className="message">
       <strong>
-        {props.sender.username} - {props.time}
+          {props.sender.username} {props.sender.role === "ADMIN" ? "(Admin)" : ""} - {props.time}
       </strong>
       {props.content}
     </div>
@@ -297,7 +297,7 @@ function MemberButton(props) {
           paddingLeft: "0.5rem",
         }}
       >
-        {props.member.username}
+        {props.member.username} {props.member.role === "ADMIN" ? "(Admin)" : "(Member)"}
       </button>
     </li>
   );
