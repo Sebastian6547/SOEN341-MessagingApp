@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
+import java.util.*;
 
 
 @Service
@@ -24,98 +25,99 @@ public class AdminService {
 
     public boolean deleteMessage(Long msgId,  HttpSession session) {
         System.out.println("Received message delete request for id " + msgId);
-        // Debugging database credentials
-        //System.out.println("Database URL: " + DB_URL);
-        //System.out.println("Database User: " + DB_USER);
-        //System.out.println("Database Password: " + (DB_PASSWORD != null ? "Set" : "Not Set"));
-
-        // Double check to see if the user is an admin
         if (!isAdmin(session)){
+            System.out.println("User is not an admin.");
             return false;
         }
-
-        // Check if credentials are loaded
-        if (DB_URL == null || DB_USER == null || DB_PASSWORD == null) {
-            System.out.println("Error: Database credentials are not set.");
-            return false;
-        }
+        System.out.println("User is an admin. Deleting this message.");
         String sql = "DELETE FROM messages WHERE id = ?";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             Statement statement = connection.createStatement()) {
-
-            // Set the role to postgres
-            statement.execute("SET ROLE postgres;");
-
-            //Executing the statement
-            try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setLong(1, msgId);
-                int rowsAffected = ps.executeUpdate();
-                if (rowsAffected > 0) {
-                    System.out.println("Message deleted successfully.");
-                    return true;
-                } else {
-                    System.out.println("No message found with ID: " + msgId);
-                    return false;
-                }
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Database error during deletion:");
-            e.printStackTrace();
+        int rowsUpdated = executeUpdate(sql, "Error Deleting Message", msgId);
+        if (rowsUpdated > 0) {
+            System.out.println("Message deleted successfully.");
+            return true;
+        } else {
+            System.out.println("No message found with ID: " + msgId);
+            return false;
         }
-        return false;
     }
 
     public boolean isAdmin(HttpSession session) {
         System.out.println("Received message isAdmin request");
 
-        // Debugging database credentials
-        //System.out.println("Database URL: " + DB_URL);
-        //System.out.println("Database User: " + DB_USER);
-        //System.out.println("Database Password: " + (DB_PASSWORD != null ? "Set" : "Not Set"));
-
-        // Check if credentials are loaded
-        if (DB_URL == null || DB_USER == null || DB_PASSWORD == null) {
-            System.out.println("Error: Database credentials are not set.");
-            return false;
-        }
-
         // Retrieving the username from the session
         String username = authService.getLoggedInUser(session);
         String sql = "SELECT role FROM users WHERE username = ?";
 
+        List<Map<String,Object>> result = executeQuery(sql, username);
+        if (result.get(0)!=null) {
+            String storedRole = result.get(0).get("role").toString();
+
+            // Check if the returned role is "ADMIN"
+            if (storedRole.equals("ADMIN")) {
+                System.out.println("User "+username+" has admin role");
+                return true;
+            } else {
+                System.out.println("User "+username+" doesn't have admin role");
+                return false;
+            }
+        } else {
+            System.out.println("User not found: " + username);
+        }
+
+        return false;
+    }
+    private List<Map<String,Object>> executeQuery(String query, Object... params){
+        List<Map<String,Object>> result = new ArrayList<>();
+
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             Statement statement = connection.createStatement()) {
+             PreparedStatement ps = connection.prepareStatement(query)){
+            //Set query parameters
+            for (int i = 0; i < params.length; i++){
+                ps.setObject(i+1, params[i]);
+            }
 
-            // Set the role to postgres
-            statement.execute("SET ROLE postgres;");
+            //Execute the query
+            try (ResultSet rs = ps.executeQuery()){
+                ResultSetMetaData metaData = rs.getMetaData();
+                int columnCount = metaData.getColumnCount();
 
-            // Retrieving the result
-            try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setString(1, username);
-                ResultSet resultSet = ps.executeQuery();
-
-                if (resultSet.next()) {
-                    String storedRole = resultSet.getString("role");
-
-                    // Check if the returned role is "ADMIN"
-                    if (storedRole.equals("ADMIN")) {
-                        System.out.println("User "+username+" has admin role");
-                        return true;
-                    } else {
-                        System.out.println("User "+username+" doesn't have admin role");
-                        return false;
+                while (rs.next()){
+                    Map<String,Object> row = new HashMap<>();
+                    for (int i = 1; i <= columnCount; i++){
+                        row.put(metaData.getColumnName(i), rs.getObject(i));
                     }
-                } else {
-                    System.out.println("User not found: " + username);
+                    result.add(row);
                 }
             }
 
-        } catch (SQLException e) {
-            System.out.println("Database error during authentication:");
+        }catch (SQLException e){
+            System.out.println("Database error during query execution: [" + query + "] with " + Arrays.toString(params));
             e.printStackTrace();
         }
-        return false;
+        return result;
+    }
+
+    // Default method to update data in the database
+    private int executeUpdate(String query, String errorMessage, Object... params) {
+        int rowsAffected = 0;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            // Bind parameters
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+
+            // Execute update and return affected rows
+            rowsAffected = ps.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(errorMessage);
+            e.printStackTrace();
+        }
+
+        return rowsAffected;
     }
 }
