@@ -21,10 +21,10 @@ const ChannelPage = () => {
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
 
-  const getChannelData = async () => {
+  const getChannelData = async (targetChannel = rawChannelName) => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/channel/${rawChannelName}`,
+        `http://localhost:8080/api/channel/${targetChannel}`,
         { withCredentials: true }
       );
       setMessages(response.data.messages);
@@ -116,6 +116,14 @@ function ChannelList({ channelName, channels, getChannelData }) {
 
 function ChannelButton({ channelName, getChannelData, channelKey, channel }) {
   const navigate = useNavigate();
+  const handleChannelSwitch = async () => {
+    try {
+      await getChannelData(channel.name); // Wait until data is loaded
+      navigate(`/channel/${channel.name}`); // Switch after loading
+    } catch (err) {
+      console.error("Failed to load channel data:", err);
+    }
+  };
   return (
     <li
       className={
@@ -132,12 +140,7 @@ function ChannelButton({ channelName, getChannelData, channelKey, channel }) {
             : "button"
         }
         style={{ fontWeight: "bold" }}
-        onClick={() => {
-          console.log(
-            `Navigating to channel: ${channel.name} (channelName: ${channelName})`
-          );
-          navigate(`/channel/${channel.name}`);
-        }}
+        onClick={handleChannelSwitch} // Trigger with wait
       >
         {channel.name.replace(/_/g, " ")}
         {/* Replace underscores with spaces */}
