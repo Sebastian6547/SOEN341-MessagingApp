@@ -173,15 +173,15 @@ public class ChannelService {
     }
 
     // Creating a channel
-    public int createChannel(String channelName, String channelType, String creatorUsername) {
+    public int createChannel(String channelName, String creatorUsername) {
         if (creatorUsername == null) {
             System.out.println("Error: No user logged in");
             return -1;
         }
 
         // Insert the new channel into the database
-        String createChannelQuery = "INSERT INTO channels (name, type) VALUES (?, ?)";
-        int rowsAffected = executeUpdate(createChannelQuery, "Error inserting channel", channelName, channelType);
+        String createChannelQuery = "INSERT INTO channels (name, type) VALUES (?, 'PC')";
+        int rowsAffected = executeUpdate(createChannelQuery, "Error inserting channel", channelName);
 
         // If channel creation failed, don't continue
         if (rowsAffected <= 0) {

@@ -227,18 +227,19 @@ function ChannelButton({ channelName, channelKey, channel, isAdmin, currentUser 
 function NewChannelButton({isAdmin, currentUser}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [channelName, setChannelName] = useState("");
-    const [channelType, setChannelType] = useState("PC"); // Default to "PC"
     const [errorMessage, setErrorMessage] = useState("");
 
     const handleCreateChannel = async () => {
         if (channelName.trim() === "") return;
 
-        console.log("Creating channel:", channelName, channelType);
+        const formattedChannelName = channelName.replace(/ /g, "_");
+
+        console.log("Creating channel:", formattedChannelName);
 
         try {
             await axios.post(
                 "http://localhost:8080/api/channel/create-channel",
-                { channelName, channelType, currentUser },
+                { formattedChannelName, currentUser },
                 { withCredentials: true }
             );
 
@@ -277,11 +278,6 @@ function NewChannelButton({isAdmin, currentUser}) {
                             value={channelName}
                             onChange={(e) => setChannelName(e.target.value)}
                         />
-
-                        <select value={channelType} onChange={(e) => setChannelType(e.target.value)}>
-                            <option value="PC">PC</option>
-                            <option value="DM">DM</option>
-                        </select>
 
                         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
 

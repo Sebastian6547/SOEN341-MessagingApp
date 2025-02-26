@@ -135,15 +135,10 @@ public class ChannelController {
             return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
         }
 
-        String channelName = channelData.get("channelName");
-        String channelType = channelData.get("channelType");
+        String channelName = channelData.get("formattedChannelName");
         String creatorUsername = channelData.get("currentUser");
 
-        if (channelType == null || !(channelType.equals("PC") || channelType.equals("DM"))) {
-            return ResponseEntity.status(400).body(Map.of("error", "Invalid channel type"));
-        }
-
-        channelService.createChannel(channelName, channelType, creatorUsername);
+        channelService.createChannel(channelName, creatorUsername);
 
         System.out.println("Channel created: " + channelName + " by " + creatorUsername);
 
