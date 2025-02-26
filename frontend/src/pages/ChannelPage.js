@@ -11,11 +11,31 @@ const ChannelPage = () => {
   const [users, setUsers] = useState([]);
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
+    const [currentUser, setCurrentUser] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
 
+    // Getting current user and check if they are admin
+        const fetchCurrentUser = async () => {
+            try {
+                const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
+                setCurrentUser(response.data.username);
+
+                // Check if current user is admin
+                const adminResponse = await axios.get(
+                    `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
+                );
+                setIsAdmin(adminResponse.data); // Set isAdmin based on the response
+
+                console.log("Current User:", response.data.username);
+                console.log("Is Admin:", adminResponse.data);
+            } catch (err) {
+                console.error("Error fetching current user:", err);
+            }
+        };
   useEffect(() => {
     // Get all channel data from the backend when the channel changes
     getChannelData();
-
+    fetchCurrentUser();
     // Poll for new messages every 5 seconds
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
@@ -65,6 +85,8 @@ const ChannelPage = () => {
         channels={channels}
         channelName={channelName}
         getChannelData={getChannelData}
+        isAdmin={isAdmin}
+        currentUser={currentUser}
       />
       <Channel
         messages={messages}
@@ -72,13 +94,16 @@ const ChannelPage = () => {
         setNewMessage={setNewMessage}
         handleSendMessage={handleSendMessage}
         channelName={channelName}
+        isAdmin={isAdmin}
+        currentUser={currentUser}
       />
-      <Members channelName={channelName} users={users} />
+      <Members channelName={channelName} users={users}         isAdmin={isAdmin}
+               currentUser={currentUser} setIsAdmin={setIsAdmin}/>
     </div>
   );
 };
 
-function Channels({ channelName, channels, getChannelData }) {
+function Channels({ channelName, channels, getChannelData, isAdmin, currentUser }) {
   return (
     <div className="channels">
       <ChannelsLogo />
@@ -86,6 +111,8 @@ function Channels({ channelName, channels, getChannelData }) {
         getChannelData={getChannelData}
         channelName={channelName}
         channels={channels}
+        isAdmin={isAdmin}
+        currentUser={currentUser}
       />
     </div>
   );
@@ -99,7 +126,7 @@ function ChannelsLogo() {
   );
 }
 
-function ChannelList({ channelName, channels, getChannelData }) {
+function ChannelList({ channelName, channels, getChannelData, isAdmin, currentUser }) {
   return (
     <ul className="channel-list">
       {channels.map((channel, index) => (
@@ -108,40 +135,18 @@ function ChannelList({ channelName, channels, getChannelData }) {
           getChannelData={getChannelData}
           channelKey={index}
           channel={channel}
+          isAdmin={isAdmin}
+          currentUser={currentUser}
         />
       ))}
-      <NewChannelButton />
+      <NewChannelButton         isAdmin={isAdmin}
+                                currentUser={currentUser}/>
     </ul>
   );
 }
 
-function ChannelButton({ channelName, channelKey, channel }) {
+function ChannelButton({ channelName, channelKey, channel, isAdmin, currentUser }) {
     const navigate = useNavigate();
-    const [currentUser, setCurrentUser] = useState("");
-    const [isAdmin, setIsAdmin] = useState(false);
-
-    // Getting current user and check if they are admin
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            try {
-                const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
-                setCurrentUser(response.data.username);
-
-                // Check if current user is admin
-                const adminResponse = await axios.get(
-                    `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
-                );
-                setIsAdmin(adminResponse.data); // Set isAdmin based on the response
-
-                console.log("Current User:", response.data.username);
-                console.log("Is Admin:", adminResponse.data);
-            } catch (err) {
-                console.error("Error fetching current user:", err);
-            }
-        };
-
-        fetchCurrentUser();
-    }, []);
 
     const handleDeleteChannel = async () => {
         // Call the backend API to delete the channel
@@ -201,37 +206,11 @@ function ChannelButton({ channelName, channelKey, channel }) {
 
 
 
-function NewChannelButton() {
+function NewChannelButton({isAdmin, currentUser}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [channelName, setChannelName] = useState("");
     const [channelType, setChannelType] = useState("PC"); // Default to "PC"
     const [errorMessage, setErrorMessage] = useState("");
-
-    const [currentUser, setCurrentUser] = useState("");
-    const [isAdmin, setIsAdmin] = useState(false);
-
-    // Getting current user and check if they are admin
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            try {
-                const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
-                setCurrentUser(response.data.username);
-
-                // Check if current user is admin
-                const adminResponse = await axios.get(
-                    `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
-                );
-                setIsAdmin(adminResponse.data);
-
-                console.log("Current User:", response.data.username);
-                console.log("Is Admin:", adminResponse.data);
-            } catch (err) {
-                console.error("Error fetching current user:", err);
-            }
-        };
-
-        fetchCurrentUser();
-    }, []);
 
     const handleCreateChannel = async () => {
         if (channelName.trim() === "") return;
@@ -309,6 +288,7 @@ function Channel({
   setNewMessage,
   handleSendMessage,
   channelName,
+    isAdmin, currentUser
 }) {
   return (
     <div className="channel">
@@ -382,33 +362,8 @@ function InputBox({ newMessage, setNewMessage, handleSendMessage }) {
   );
 }
 
-function Members({ channelName, users }) {
+function Members({ channelName, users, isAdmin, currentUser, setIsAdmin}) {
   const [active, setActive] = React.useState(false);
-    const [currentUser, setCurrentUser] = useState(""); // Track the current logged-in user's username
-    const [isAdmin, setIsAdmin] = useState(false); // Track if the current user is an admin
-
-    // Getting current user and check if they are admin
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            try {
-                const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
-                setCurrentUser(response.data.username);
-
-                // Check if current user is admin
-                const adminResponse = await axios.get(
-                    `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
-                );
-                setIsAdmin(adminResponse.data);
-
-                console.log("Current User:", response.data.username);
-                console.log("Is Admin:", adminResponse.data);
-            } catch (err) {
-                console.error("Error fetching current user:", err);
-            }
-        };
-
-        fetchCurrentUser();
-    }, []);
 
     const changeUserRole = async (targetUsername, newRole) => {
         try {
@@ -434,7 +389,7 @@ function Members({ channelName, users }) {
     return (
     <div className={active ? "members" : "members members-inactive"}>
       <MembersLogo active={active} setActive={setActive} />
-      <MemberList active={active} activeChannel={channelName} users={users} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole}/>
+      <MemberList active={active} activeChannel={channelName} users={users} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} setIsAdmin={setIsAdmin}/>
     </div>
   );
 }
@@ -464,18 +419,17 @@ function MembersLogo({ active, setActive }) {
     );
 }
 
-function MemberList({ active, users, currentUser, isAdmin, changeUserRole, activeChannel }) {
+function MemberList({ active, users, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
   return (
     <ul className="member-list">
       {users.map((member, index) => (
-        <MemberButton active={active} key={index} member={member} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} activeChannel={activeChannel}/>
+        <MemberButton active={active} key={index} member={member} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} activeChannel={activeChannel} setIsAdmin={setIsAdmin}/>
       ))}
     </ul>
   );
 }
 
-function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChannel }) {
-    const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
+function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
     const [adminsCount, setAdminsCount] = useState(0);
 
     // Get the number of admins in the channel
@@ -496,7 +450,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
 
     // Handling the role toggle
     const handleToggleChange = async () => {
-        const newRole = isAdminRole ? "MEMBER" : "ADMIN";
+        const newRole = isAdmin ? "MEMBER" : "ADMIN";
 
         // Fetch the latest admins count to make sure it is updated before making changes
         await fetchAdminsCount();
@@ -514,7 +468,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
             // Get the updated admin count again
             await fetchAdminsCount();
 
-            setIsAdminRole(!isAdminRole); // Toggle the role state immediately
+            setIsAdmin(!isAdmin); // Toggle the role state immediately
         }
     };
 
@@ -532,7 +486,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
                             <span className="role-label">Member</span>
                             <input
                                 type="checkbox"
-                                checked={isAdminRole}
+                                checked={isAdmin}
                                 onChange={handleToggleChange}
                             />
                             <span className="role-label">Admin</span>
