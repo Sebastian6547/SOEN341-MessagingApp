@@ -17,6 +17,7 @@ public class ChannelService {
     // This class is a service class that provides methods to get channels, users in a channel, messages in a channel, and the latest message in a channel
     // These methods are used by the channel controller to get data from the service layer
     // Load .env variables
+
     private static final Dotenv dotenv = Dotenv.load();
 
     private static final String DB_URL = dotenv.get("DB_URL");
@@ -148,6 +149,22 @@ public class ChannelService {
         return users;
     }
 
+    // Get the number of admins in a channel
+    public int getAdminsCountForChannel(String channelName) {
+        System.out.println("Fetching the number of admins in channel: " + channelName + " from the database...");
+
+        List<User> users = getUsersInChannel(channelName);
+
+        int adminsCount = 0;
+        for (User user : users) {
+            if (user.getRole() == User.UserRole.ADMIN) {
+                adminsCount++;
+            }
+        }
+
+        return adminsCount;
+    }
+
     // Send a message to a channel
     public void sendMessage(String channelName, String content, String sender) {
         System.out.println("Sending message to channel: " + channelName + " from user: " + sender + " with content: " + content);
@@ -155,8 +172,72 @@ public class ChannelService {
         executeUpdate(query, "Error sending message to channel", content, sender, channelName, Timestamp.valueOf(LocalDateTime.now()));
     }
 
+    // Creating a channel
+    public int createChannel(String channelName, String channelType, String creatorUsername) {
+        if (creatorUsername == null) {
+            System.out.println("Error: No user logged in");
+            return -1;
+        }
+
+        // Insert the new channel into the database
+        String createChannelQuery = "INSERT INTO channels (name, type) VALUES (?, ?)";
+        int rowsAffected = executeUpdate(createChannelQuery, "Error inserting channel", channelName, channelType);
+
+        // If channel creation failed, don't continue
+        if (rowsAffected <= 0) {
+            return -1;
+        }
+
+        // Insert the creator into the user_channel table
+        String addUserToChannelQuery = "INSERT INTO user_channel (username, channel_name) VALUES (?, ?)";
+        executeUpdate(addUserToChannelQuery, "Error adding user to channel", creatorUsername, channelName);
+
+        System.out.println("Channel created successfully by user: " + creatorUsername);
+        return rowsAffected;
+    }
+
+    public int deleteChannel(String channelName) {
+        System.out.println("Trying to delete channel: " + channelName);
+
+        // Check if the channel exists
+        String checkChannelQuery = "SELECT COUNT(*) AS count FROM channels WHERE name = ?";
+        List<Map<String, Object>> result = executeQuery(checkChannelQuery, channelName);
+
+        // Debugging: Log the query result
+        // System.out.println("Query result: " + result);
+
+        // If no rows are found or count is 0 the channel doesn't exist
+        if (result.isEmpty() || result.get(0).get("count") == null || ((Long) result.get(0).get("count")).intValue() <= 0) {
+            System.out.println("Error: Channel does not exist");
+            return -1;
+        }
+
+        // Delete the associated rows in the user_channel table (all user-channel associations)
+        String deleteUserChannelQuery = "DELETE FROM user_channel WHERE channel_name = ?";
+        int userChannelRowsAffected = executeUpdate(deleteUserChannelQuery, "Error deleting from user_channel", channelName);
+
+        // If there's an issue deleting user-channel associations don't continue
+        if (userChannelRowsAffected <= 0) {
+            System.out.println("Error: Failed to delete user-channel associations");
+            return -1;
+        }
+
+        // Delete the channel from the channels table
+        String deleteChannelQuery = "DELETE FROM channels WHERE name = ?";
+        int rowsAffected = executeUpdate(deleteChannelQuery, "Error deleting channel", channelName);
+
+        if (rowsAffected <= 0) {
+            System.out.println("Error: Failed to delete channel");
+            return -1;
+        }
+
+        System.out.println("Channel deleted successfully: " + channelName);
+        return rowsAffected;
+    }
+
+
     // Default method to get data from the database
-    private List<Map<String,Object>> executeQuery(String query, Object... params){
+    List<Map<String,Object>> executeQuery(String query, Object... params){
         List<Map<String,Object>> result = new ArrayList<>();
 
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -188,7 +269,7 @@ public class ChannelService {
     }
 
     // Default method to update data in the database
-    private int executeUpdate(String query, String errorMessage, Object... params) {
+    int executeUpdate(String query, String errorMessage, Object... params) {
         int rowsAffected = 0;
 
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -209,4 +290,6 @@ public class ChannelService {
 
         return rowsAffected;
     }
+
+
 }
