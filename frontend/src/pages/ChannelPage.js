@@ -11,15 +11,32 @@ const ChannelPage = () => {
   const [users, setUsers] = useState([]);
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
+  const [isAdmin, setIsAdmin] = useState(false);; // Used to identify if the current user is an admin
 
   useEffect(() => {
     // Get all channel data from the backend when the channel changes
     getChannelData();
-
+    // Check if the current user is admin to display the delete message on hovered
+    getAdminData();
     // Poll for new messages every 5 seconds
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
+
+
+  //Check for admin when the page is loaded
+  const getAdminData = async () => {
+      try {
+        const response = await axios.get(
+          'http://localhost:8080/api/admin/checkAdmin', 
+          { withCredentials: true });
+        const isAdmin = response.data;
+        console.log('Is Admin:', isAdmin);
+        setIsAdmin(isAdmin);
+      } catch (error) {
+        console.error('Error fetching admin status:', error);
+      }
+  }
 
   const getChannelData = async () => {
     try {
@@ -57,6 +74,23 @@ const ChannelPage = () => {
       console.error("Error sending message:", err);
     }
   };
+  const handleDeleteMessage = async (messageId) => {
+    const userConfirmed = window.confirm("Are you sure you want to delete this message?");
+    
+    if (!userConfirmed) {
+      return; 
+    }
+  
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
+        { withCredentials: true }
+      );
+      getChannelData(); // Fetch the latest messages
+    } catch (err) {
+      console.error("Error deleting message:", err);
+    }
+  };
 
   return (
     <div className="App">
@@ -70,6 +104,8 @@ const ChannelPage = () => {
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         handleSendMessage={handleSendMessage}
+        handleDeleteMessage={handleDeleteMessage}
+        isAdmin = {isAdmin}
         channelName={channelName}
       />
       <Members channelName={channelName} users={users} />
@@ -159,12 +195,18 @@ function Channel({
   newMessage,
   setNewMessage,
   handleSendMessage,
+  handleDeleteMessage,
+  isAdmin,
   channelName,
 }) {
   return (
     <div className="channel">
       <ChannelLogo channelName={channelName} />
-      <Messages messages={messages} channelName={channelName} />
+      <Messages 
+        messages={messages} 
+        channelName={channelName}
+        handleDeleteMessage={handleDeleteMessage}
+        isAdmin={isAdmin} />
       <InputBox
         newMessage={newMessage}
         setNewMessage={setNewMessage}
@@ -182,7 +224,7 @@ function ChannelLogo({ channelName }) {
   );
 }
 
-function Messages({ messages, channelName }) {
+function Messages({ messages, channelName, handleDeleteMessage, isAdmin }) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -194,9 +236,12 @@ function Messages({ messages, channelName }) {
       {messages.map((msg) => (
         <Message
           key={msg.id}
+          id={msg.id}
           sender={msg.sender}
           content={msg.content}
           time={msg.date_time}
+          handleDeleteMessage={handleDeleteMessage}
+          isAdmin={isAdmin}
         />
       ))}
       <div ref={messagesEndRef} />
@@ -205,12 +250,27 @@ function Messages({ messages, channelName }) {
 }
 
 function Message(props) {
+  const [isHovered, setIsHovered] = useState(false); //Use to check if it is being hovered
   return (
-    <div className="message">
+    <div 
+      className="message"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <strong>
         {props.sender.username} - {props.time}
       </strong>
       {props.content}
+      {
+      // This button only appear when hovered and the current user is an admin
+      isHovered && props.isAdmin && (
+        <button
+          className="message-delete-button"
+          onClick={() => props.handleDeleteMessage(props.id)} // Call delete function
+        >
+          Delete this message?
+        </button>
+      )}
     </div>
   );
 }
