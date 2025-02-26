@@ -41,8 +41,8 @@ public class AdminController {
     }
 
     @DeleteMapping("/deleteMessage/{messageId}")
-    public ResponseEntity<String> deleteMessage(@PathVariable Long messageId, HttpSession session)  {
-        boolean isDeleted = adminService.deleteMessage(messageId, session);
+    public ResponseEntity<String> deleteMessage(@PathVariable Long messageId)  {
+        boolean isDeleted = adminService.deleteMessage(messageId);
         if (isDeleted) {
             System.out.println("Message deleted successfully");
             return ResponseEntity.ok("Message deleted successfully.");

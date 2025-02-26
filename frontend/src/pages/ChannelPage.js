@@ -56,8 +56,8 @@ const ChannelPage = () => {
     } catch (err) {
       console.error("Error fetching channel data:", err);
       if (err.response && err.response.status === 403) {
-        alert("You are not a member of this channel.");
-        navigate("/"); // Redirect to home if unauthorized
+        alert("Redirecting to the General channel");
+        navigate("/channel/General"); // Redirect to home if unauthorized
       }
     }
   };
@@ -472,6 +472,7 @@ function MemberList({ active, users, currentUser, isAdmin, changeUserRole, activ
 
 function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
     const [adminsCount, setAdminsCount] = useState(0);
+    const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
 
     // Get the number of admins in the channel
     const fetchAdminsCount = async () => {
@@ -479,6 +480,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
             const response = await fetch(`http://localhost:8080/api/channel/admins-count/${activeChannel}`);
             const data = await response.json();
             setAdminsCount(data.adminsCount); // Update the state with fetched value
+            console.log(adminsCount)
         } catch (error) {
             console.error("Error fetching admins count:", error);
         }
@@ -491,7 +493,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
 
     // Handling the role toggle
     const handleToggleChange = async () => {
-        const newRole = isAdmin ? "MEMBER" : "ADMIN";
+        const newRole = isAdminRole ? "MEMBER" : "ADMIN";
 
         // Fetch the latest admins count to make sure it is updated before making changes
         await fetchAdminsCount();
@@ -509,7 +511,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
             // Get the updated admin count again
             await fetchAdminsCount();
 
-            setIsAdmin(!isAdmin); // Toggle the role state immediately
+            setIsAdminRole(!isAdminRole); // Toggle the role state immediately
         }
     };
 
@@ -527,7 +529,7 @@ function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChan
                             <span className="role-label">Member</span>
                             <input
                                 type="checkbox"
-                                checked={isAdmin}
+                                checked={isAdminRole}
                                 onChange={handleToggleChange}
                             />
                             <span className="role-label">Admin</span>

@@ -45,12 +45,8 @@ public class AdminService {
         }
     }
 
-    public boolean deleteMessage(Long msgId,  String username) {
+    public boolean deleteMessage(Long msgId) {
         System.out.println("Received message delete request for id " + msgId);
-        if (!isAdmin(username)){
-            System.out.println("User is not an admin.");
-            return false;
-        }
         System.out.println("User is an admin. Deleting this message.");
         String sql = "DELETE FROM messages WHERE id = ?";
 
