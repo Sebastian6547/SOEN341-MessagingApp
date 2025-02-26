@@ -1,14 +1,18 @@
 package com.messagingApp.messagingApp_backend.services;
 
-
 import io.github.cdimascio.dotenv.Dotenv;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Map;
 
+import java.sql.*;
+import java.util.*;
+
+
 @Service
 public class AdminService {
-
     private final ChannelService channelService;
 
     public AdminService(ChannelService channelService) {
@@ -41,5 +45,26 @@ public class AdminService {
         }
     }
 
+    public boolean deleteMessage(Long msgId,  String username) {
+        System.out.println("Received message delete request for id " + msgId);
+        if (!isAdmin(username)){
+            System.out.println("User is not an admin.");
+            return false;
+        }
+        System.out.println("User is an admin. Deleting this message.");
+        String sql = "DELETE FROM messages WHERE id = ?";
 
-}
+        int rowsUpdated = channelService.executeUpdate(sql, "Error Deleting Message", msgId);
+        if (rowsUpdated > 0) {
+            System.out.println("Message deleted successfully.");
+            return true;
+        } else {
+            System.out.println("No message found with ID: " + msgId);
+            return false;
+        }
+    }
+
+
+
+        }
+

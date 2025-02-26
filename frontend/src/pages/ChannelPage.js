@@ -15,23 +15,24 @@ const ChannelPage = () => {
     const [isAdmin, setIsAdmin] = useState(false);
 
     // Getting current user and check if they are admin
-        const fetchCurrentUser = async () => {
-            try {
-                const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
-                setCurrentUser(response.data.username);
+    const fetchCurrentUser = async () => {
+        try {
+            const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
+            setCurrentUser(response.data.username);
 
-                // Check if current user is admin
-                const adminResponse = await axios.get(
-                    `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
-                );
-                setIsAdmin(adminResponse.data); // Set isAdmin based on the response
+            // Check if current user is admin
+            const adminResponse = await axios.get(
+                `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
+            );
+            setIsAdmin(adminResponse.data); // Set isAdmin based on the response
 
-                console.log("Current User:", response.data.username);
-                console.log("Is Admin:", adminResponse.data);
-            } catch (err) {
-                console.error("Error fetching current user:", err);
-            }
-        };
+            console.log("Current User:", response.data.username);
+            console.log("Is Admin:", adminResponse.data);
+        } catch (err) {
+            console.error("Error fetching current user:", err);
+        }
+    };
+
   useEffect(() => {
     // Get all channel data from the backend when the channel changes
     getChannelData();
@@ -79,6 +80,24 @@ const ChannelPage = () => {
     }
   };
 
+    const handleDeleteMessage = async (messageId) => {
+        const userConfirmed = window.confirm("Are you sure you want to delete this message?");
+
+        if (!userConfirmed) {
+            return;
+        }
+
+        try {
+            await axios.delete(
+                `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
+                { withCredentials: true }
+            );
+            getChannelData(); // Fetch the latest messages
+        } catch (err) {
+            console.error("Error deleting message:", err);
+        }
+    };
+
   return (
     <div className="App">
       <Channels
@@ -93,6 +112,7 @@ const ChannelPage = () => {
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         handleSendMessage={handleSendMessage}
+        handleDeleteMessage={handleDeleteMessage}
         channelName={channelName}
         isAdmin={isAdmin}
         currentUser={currentUser}
@@ -204,8 +224,6 @@ function ChannelButton({ channelName, channelKey, channel, isAdmin, currentUser 
     );
 }
 
-
-
 function NewChannelButton({isAdmin, currentUser}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [channelName, setChannelName] = useState("");
@@ -287,13 +305,18 @@ function Channel({
   newMessage,
   setNewMessage,
   handleSendMessage,
-  channelName,
-    isAdmin, currentUser
+  handleDeleteMessage,
+  isAdmin,
+  channelName, currentUser
 }) {
   return (
     <div className="channel">
       <ChannelLogo channelName={channelName} />
-      <Messages messages={messages} channelName={channelName} />
+      <Messages
+        messages={messages}
+        channelName={channelName}
+        handleDeleteMessage={handleDeleteMessage}
+        isAdmin={isAdmin} />
       <InputBox
         newMessage={newMessage}
         setNewMessage={setNewMessage}
@@ -311,7 +334,7 @@ function ChannelLogo({ channelName }) {
   );
 }
 
-function Messages({ messages, channelName }) {
+function Messages({ messages, channelName, handleDeleteMessage, isAdmin }) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -323,9 +346,12 @@ function Messages({ messages, channelName }) {
       {messages.map((msg) => (
         <Message
           key={msg.id}
+          id={msg.id}
           sender={msg.sender}
           content={msg.content}
           time={msg.date_time}
+          handleDeleteMessage={handleDeleteMessage}
+          isAdmin={isAdmin}
         />
       ))}
       <div ref={messagesEndRef} />
@@ -334,12 +360,27 @@ function Messages({ messages, channelName }) {
 }
 
 function Message(props) {
+  const [isHovered, setIsHovered] = useState(false); //Use to check if it is being hovered
   return (
-    <div className="message">
+    <div
+      className="message"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <strong>
           {props.sender.username} {props.sender.role === "ADMIN" ? "(Admin)" : ""} - {props.time}
       </strong>
       {props.content}
+      {
+      // This button only appear when hovered and the current user is an admin
+      isHovered && props.isAdmin && (
+        <button
+          className="message-delete-button"
+          onClick={() => props.handleDeleteMessage(props.id)} // Call delete function
+        >
+          Delete this message?
+        </button>
+      )}
     </div>
   );
 }
