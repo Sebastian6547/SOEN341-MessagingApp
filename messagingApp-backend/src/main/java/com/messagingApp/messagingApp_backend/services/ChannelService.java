@@ -4,13 +4,13 @@ import com.messagingApp.messagingApp_backend.models.Channel;
 import com.messagingApp.messagingApp_backend.models.Message;
 import com.messagingApp.messagingApp_backend.models.User;
 import org.springframework.stereotype.Service;
+import com.messagingApp.messagingApp_backend.services.AuthService;
 
 import java.time.LocalDateTime;
+import io.github.cdimascio.dotenv.Dotenv;
 import java.util.*;
-
 import java.sql.*;
 
-import io.github.cdimascio.dotenv.Dotenv;
 
 @Service
 public class ChannelService {
@@ -153,6 +153,31 @@ public class ChannelService {
         System.out.println("Sending message to channel: " + channelName + " from user: " + sender + " with content: " + content);
         String query = "INSERT INTO messages (text, username, channel_name, date_time) VALUES (?, ?, ?, ?)";
         executeUpdate(query, "Error sending message to channel", content, sender, channelName, Timestamp.valueOf(LocalDateTime.now()));
+    /*
+        public void sendMessage(String channelName, String content, String sender) {
+        // Generate a unique message ID
+        LocalDateTime now = LocalDateTime.now();
+        Timestamp timestamp = Timestamp.valueOf(now);
+        String sql = "INSERT INTO messages (username, text, date_time, channel_name) VALUES (?, ?, ?, ?)";
+        try(Connection connection = AuthService.establishConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)){
+            ps.setString(1,sender);
+            ps.setString(2,content);
+            ps.setTimestamp(3,timestamp);
+            ps.setString(4,channelName);
+
+            int row = ps.executeUpdate();
+            if(row >0){
+                System.out.println("Succesfully stored message, row : " + row);
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Database error during message insertion:");
+            e.printStackTrace();
+        }
+
+    }
+     */
     }
 
     // Default method to get data from the database
