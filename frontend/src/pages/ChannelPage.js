@@ -101,7 +101,6 @@ const ChannelPage = () => {
       console.error("Error sending message:", err);
     }
   };
-
   const handleDeleteMessage = async (messageId) => {
     const userConfirmed = window.confirm(
       "Are you sure you want to delete this message?"
@@ -389,6 +388,17 @@ function Message(props) {
         }
       </div>
       {props.content}
+      {
+        // This button only appear when hovered and the current user is an admin
+        isHovered && props.isAdmin && (
+          <button
+            className="message-delete-button"
+            onClick={() => props.handleDeleteMessage(props.id)} // Call delete function
+          >
+            Delete this message?
+          </button>
+        )
+      }
     </div>
   );
 }

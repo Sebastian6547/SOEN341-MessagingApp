@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import './App.css';
 import React, { useEffect, useState} from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
@@ -23,8 +22,9 @@ const AppRoutes = ({ setUsername }) => {
 
   useEffect(() => {
       // Check session when the app starts
-      axios.get("http://localhost:8080/api/auth/session", { withCredentials: true })
+      axios.get("http://localhost:8080/api/auth/check", { withCredentials: true })
           .then(response => {
+              console.log("Session found:", response.data);
               setUsername(response.data.username);
               navigate("/channel/General"); // Redirect if session exists
           })
