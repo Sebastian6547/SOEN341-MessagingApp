@@ -4,6 +4,7 @@ import axios from "axios";
 import "../styles/ChannelPage.css";
 
 const ChannelPage = () => {
+  const [loggedUser, setLoggedUser] = useState("");
   const { channelName: rawChannelName } = useParams();
   const channelName = rawChannelName.replace(/_/g, " "); // Replace underscores with spaces for display
   const [messages, setMessages] = useState([]);
@@ -11,15 +12,47 @@ const ChannelPage = () => {
   const [users, setUsers] = useState([]);
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
+  const [isAdmin, setIsAdmin] = useState(false); // Used to identify if the current user is an admin
 
   useEffect(() => {
+    // Get logged user data when the page is loaded
+    getUserData();
     // Get all channel data from the backend when the channel changes
     getChannelData();
-
+    // Check if the current user is admin to display the delete message on hovered
+    getAdminData();
     // Poll for new messages every 5 seconds
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
+
+  //Check for admin when the page is loaded
+  const getUserData = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/auth/check", {
+        withCredentials: true,
+      });
+      const user = response.data;
+      setLoggedUser(user.username);
+      console.log("Logged User:", loggedUser);
+    } catch (error) {
+      console.error("Error fetching user status:", error);
+    }
+  };
+
+  const getAdminData = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/admin/checkAdmin",
+        { withCredentials: true }
+      );
+      const isAdmin = response.data;
+      console.log("Is Admin:", isAdmin);
+      setIsAdmin(isAdmin);
+    } catch (error) {
+      console.error("Error fetching admin status:", error);
+    }
+  };
 
   const getChannelData = async () => {
     try {
@@ -37,6 +70,17 @@ const ChannelPage = () => {
         alert("You are not a member of this channel.");
         navigate("/"); // Redirect to home if unauthorized
       }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://localhost:8080/api/auth/logout", null, {
+        withCredentials: true,
+      });
+      navigate("/"); // Redirect to home after logout
+    } catch (err) {
+      console.error("Error logging out:", err);
     }
   };
 
@@ -58,63 +102,166 @@ const ChannelPage = () => {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    const userConfirmed = window.confirm(
+      "Are you sure you want to delete this message?"
+    );
+
+    if (!userConfirmed) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
+        { withCredentials: true }
+      );
+      getChannelData(); // Fetch the latest messages
+    } catch (err) {
+      console.error("Error deleting message:", err);
+    }
+  };
+
+  const currentChannel = channels.find(
+    (channel) => channel.name === rawChannelName
+  );
+
   return (
     <div className="App">
-      <Channels
-        channels={channels}
-        channelName={channelName}
-        getChannelData={getChannelData}
-      />
+      <div className="sidebar">
+        <Channels
+          channels={channels}
+          channelName={channelName}
+          getChannelData={getChannelData}
+          loggedUser={loggedUser}
+        />
+        <UserPanel loggedUser={loggedUser} handleLogout={handleLogout} />
+      </div>
+
       <Channel
         messages={messages}
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         handleSendMessage={handleSendMessage}
-        channelName={channelName}
+        handleDeleteMessage={handleDeleteMessage}
+        isAdmin={isAdmin}
+        channelName={
+          currentChannel && currentChannel.type === "DM"
+            ? currentChannel.name
+                .replace(/_/g, " ")
+                .split(" ")
+                .filter((name) => name !== loggedUser)
+                .join(" ")
+            : currentChannel
+            ? currentChannel.name.replace(/_/g, " ")
+            : ""
+        }
       />
       <Members channelName={channelName} users={users} />
     </div>
   );
 };
 
-function Channels({ channelName, channels, getChannelData }) {
+function UserPanel({ loggedUser, handleLogout }) {
+  return (
+    <div className="user-pannel">
+      <h2>{loggedUser}</h2>
+      <button className="logout-button" onClick={handleLogout}>
+        Logout
+      </button>
+    </div>
+  );
+}
+
+function Channels({ channelName, channels, getChannelData, loggedUser }) {
+  const [channelType, setChannelType] = useState("PC");
+
+  const handleChannelTypeChange = (type) => {
+    console.log("Changing channel type to:", type);
+    setChannelType(type);
+    getChannelData();
+  };
   return (
     <div className="channels">
-      <ChannelsLogo />
+      <ChannelsLogo
+        channelType={channelType}
+        handleChannelTypeChange={handleChannelTypeChange}
+      />
       <ChannelList
         getChannelData={getChannelData}
         channelName={channelName}
         channels={channels}
+        channelType={channelType}
+        loggedUser={loggedUser}
       />
     </div>
   );
 }
 
-function ChannelsLogo() {
+function ChannelsLogo({ channelType, handleChannelTypeChange }) {
+  const [isHovered, setIsHovered] = useState(false);
   return (
     <div className="channels-logo">
-      <h2>CHANNELS</h2>
+      <button
+        className="channel-type-button"
+        onClick={() =>
+          handleChannelTypeChange(channelType === "PC" ? "DM" : "PC")
+        }
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {(isHovered || channelType === "PC") && (
+          <img
+            className="channel-type-img"
+            src={require("../styles/public-icon.png")}
+            alt="Public Channels"
+          ></img>
+        )}
+        {(isHovered || channelType === "DM") && (
+          <img
+            className="channel-type-img"
+            src={require("../styles/private-icon.png")}
+            alt="Private Channels"
+          ></img>
+        )}
+      </button>
+      <h3>CHANNELS</h3>
     </div>
   );
 }
 
-function ChannelList({ channelName, channels, getChannelData }) {
+function ChannelList({
+  channelName,
+  channels,
+  getChannelData,
+  channelType,
+  loggedUser,
+}) {
   return (
     <ul className="channel-list">
-      {channels.map((channel, index) => (
-        <ChannelButton
-          channelName={channelName}
-          getChannelData={getChannelData}
-          channelKey={index}
-          channel={channel}
-        />
-      ))}
+      {channels
+        .filter((channel) => channel.type === channelType)
+        .map((channel, index) => (
+          <ChannelButton
+            channelName={channelName}
+            getChannelData={getChannelData}
+            channelKey={index}
+            channel={channel}
+            loggedUser={loggedUser}
+          />
+        ))}
       <NewChannelButton />
     </ul>
   );
 }
 
-function ChannelButton({ channelName, getChannelData, channelKey, channel }) {
+function ChannelButton({
+  channelName,
+  getChannelData,
+  channelKey,
+  channel,
+  loggedUser,
+}) {
   const navigate = useNavigate();
   return (
     <li
@@ -134,13 +281,18 @@ function ChannelButton({ channelName, getChannelData, channelKey, channel }) {
         style={{ fontWeight: "bold" }}
         onClick={() => {
           console.log(
-            `Navigating to channel: ${channel.name} (channelName: ${channelName})`
+            `Navigating to channel: ${channel.name} (channelName: ${channelName}) (Channel type: ${channel.type})`
           );
           navigate(`/channel/${channel.name}`);
         }}
       >
-        {channel.name.replace(/_/g, " ")}
-        {/* Replace underscores with spaces */}
+        {channel.type === "DM"
+          ? channel.name
+              .replace(/_/g, " ")
+              .split(" ")
+              .filter((name) => name !== loggedUser)
+              .join(" ")
+          : channel.name.replace(/_/g, " ")}
       </button>
     </li>
   );
@@ -159,12 +311,19 @@ function Channel({
   newMessage,
   setNewMessage,
   handleSendMessage,
+  handleDeleteMessage,
+  isAdmin,
   channelName,
 }) {
   return (
     <div className="channel">
       <ChannelLogo channelName={channelName} />
-      <Messages messages={messages} channelName={channelName} />
+      <Messages
+        messages={messages}
+        channelName={channelName}
+        handleDeleteMessage={handleDeleteMessage}
+        isAdmin={isAdmin}
+      />
       <InputBox
         newMessage={newMessage}
         setNewMessage={setNewMessage}
@@ -182,7 +341,7 @@ function ChannelLogo({ channelName }) {
   );
 }
 
-function Messages({ messages, channelName }) {
+function Messages({ messages, channelName, handleDeleteMessage, isAdmin }) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -194,9 +353,12 @@ function Messages({ messages, channelName }) {
       {messages.map((msg) => (
         <Message
           key={msg.id}
+          id={msg.id}
           sender={msg.sender}
           content={msg.content}
           time={msg.date_time}
+          handleDeleteMessage={handleDeleteMessage}
+          isAdmin={isAdmin}
         />
       ))}
       <div ref={messagesEndRef} />
@@ -205,12 +367,41 @@ function Messages({ messages, channelName }) {
 }
 
 function Message(props) {
+  const [isHovered, setIsHovered] = useState(false); //Use to check if it is being hovered
   return (
-    <div className="message">
-      <strong>
-        {props.sender.username} - {props.time}
-      </strong>
+    <div
+      className="message"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="message-header">
+        <strong>
+          {props.sender.username} - {props.time}
+        </strong>
+        {
+          // This button only appear when hovered and the current user is an admin
+          isHovered && props.isAdmin && (
+            <DeleteMessage
+              id={props.id}
+              handleDeleteMessage={props.handleDeleteMessage}
+            />
+          )
+        }
+      </div>
       {props.content}
+    </div>
+  );
+}
+
+function DeleteMessage({ id, handleDeleteMessage }) {
+  return (
+    <div>
+      <button
+        className="message-delete-button"
+        onClick={() => handleDeleteMessage(id)} // Call delete function
+      >
+        Delete
+      </button>
     </div>
   );
 }
