@@ -388,17 +388,6 @@ function Message(props) {
         }
       </div>
       {props.content}
-      {
-        // This button only appear when hovered and the current user is an admin
-        isHovered && props.isAdmin && (
-          <button
-            className="message-delete-button"
-            onClick={() => props.handleDeleteMessage(props.id)} // Call delete function
-          >
-            Delete this message?
-          </button>
-        )
-      }
     </div>
   );
 }
