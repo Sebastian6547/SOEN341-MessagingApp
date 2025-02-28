@@ -5,12 +5,13 @@ import com.messagingApp.messagingApp_backend.models.Message;
 import com.messagingApp.messagingApp_backend.models.User;
 import com.messagingApp.messagingApp_backend.services.AuthService;
 import com.messagingApp.messagingApp_backend.services.ChannelService;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -116,4 +117,47 @@ public class ChannelController {
         List<User> users = channelService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+    // Get the number of admins in a specific channel
+    @GetMapping("/admins-count/{channelName}")
+    public ResponseEntity<Map<String, Integer>> getAdminsCountForChannel(@PathVariable String channelName) {
+        int adminsCount = channelService.getAdminsCountForChannel(channelName);
+        Map<String, Integer> response = new HashMap<>();
+        response.put("adminsCount", adminsCount);
+        return ResponseEntity.ok(response);
+    }
+
+    // Creating a channel
+    @PostMapping("/create-channel")
+    public ResponseEntity<?> createChannel(@RequestBody Map<String, String> channelData, HttpSession session) {
+        String username = authService.getLoggedInUser(session);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+        }
+
+        String channelName = channelData.get("formattedChannelName");
+        String creatorUsername = channelData.get("currentUser");
+
+        channelService.createChannel(channelName, creatorUsername);
+
+        System.out.println("Channel created: " + channelName + " by " + creatorUsername);
+
+        return ResponseEntity.ok(Map.of("message", "Channel created successfully"));
+    }
+
+    // Deleting a channel
+    @DeleteMapping("/delete-channel/{channelName}")
+    public ResponseEntity<String> deleteChannel(@PathVariable String channelName) {
+        int result = channelService.deleteChannel(channelName);
+
+        if (result > 0) {
+            return ResponseEntity.ok("Channel deleted successfully: " + channelName);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: Failed to delete channel.");
+        }
+    }
+
+
+
+
 }
