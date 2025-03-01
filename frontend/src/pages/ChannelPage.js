@@ -4,6 +4,7 @@ import axios from "axios";
 import "../styles/ChannelPage.css";
 
 const ChannelPage = () => {
+  const [loggedUser, setLoggedUser] = useState("");
   const { channelName: rawChannelName } = useParams();
   const channelName = rawChannelName.replace(/_/g, " "); // Replace underscores with spaces for display
   const [messages, setMessages] = useState([]);
@@ -11,7 +12,6 @@ const ChannelPage = () => {
   const [users, setUsers] = useState([]);
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
-    const [currentUser, setCurrentUser] = useState("");
     const [isAdmin, setIsAdmin] = useState(false);
 
     // Getting current user and check if they are admin
@@ -34,6 +34,8 @@ const ChannelPage = () => {
     };
 
   useEffect(() => {
+    // Get logged user data when the page is loaded
+    getUserData();
     // Get all channel data from the backend when the channel changes
     getChannelData();
     fetchCurrentUser();
@@ -41,6 +43,34 @@ const ChannelPage = () => {
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
+
+  //Check for admin when the page is loaded
+  const getUserData = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/auth/check", {
+        withCredentials: true,
+      });
+      const user = response.data;
+      setLoggedUser(user.username);
+      console.log("Logged User:", loggedUser);
+    } catch (error) {
+      console.error("Error fetching user status:", error);
+    }
+  };
+
+  const getAdminData = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/admin/checkAdmin",
+        { withCredentials: true }
+      );
+      const isAdmin = response.data;
+      console.log("Is Admin:", isAdmin);
+      setIsAdmin(isAdmin);
+    } catch (error) {
+      console.error("Error fetching admin status:", error);
+    }
+  };
 
   const getChannelData = async () => {
     try {
@@ -59,6 +89,17 @@ const ChannelPage = () => {
         alert("Redirecting to the General channel");
         navigate("/channel/General"); // Redirect to home if unauthorized
       }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://localhost:8080/api/auth/logout", null, {
+        withCredentials: true,
+      });
+      navigate("/"); // Redirect to home after logout
+    } catch (err) {
+      console.error("Error logging out:", err);
     }
   };
 
@@ -81,95 +122,177 @@ const ChannelPage = () => {
   };
 
   const handleDeleteMessage = async (messageId) => {
-      const userConfirmed = window.confirm("Are you sure you want to delete this message?");
+    const userConfirmed = window.confirm(
+      "Are you sure you want to delete this message?"
+    );
 
-      if (!userConfirmed) {
-          return;
-      }
+    if (!userConfirmed) {
+      return;
+    }
 
-      try {
-          await axios.delete(
-              `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
-              { withCredentials: true }
-          );
-          getChannelData(); // Fetch the latest messages
-      } catch (err) {
-          console.error("Error deleting message:", err);
-      }
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
+        { withCredentials: true }
+      );
+      getChannelData(); // Fetch the latest messages
+    } catch (err) {
+      console.error("Error deleting message:", err);
+    }
   };
-  
+
+  const currentChannel = channels.find(
+    (channel) => channel.name === rawChannelName
+  );
+
   return (
     <div className="App">
-      <Channels
-        channels={channels}
-        channelName={channelName}
-        getChannelData={getChannelData}
-        isAdmin={isAdmin}
-        currentUser={currentUser}
-      />
+      <div className="sidebar">
+        <Channels
+          channels={channels}
+          channelName={channelName}
+          getChannelData={getChannelData}
+          isAdmin={isAdmin}
+          loggedUser={loggedUser}
+        />
+        <UserPanel loggedUser={loggedUser} handleLogout={handleLogout} />
+      </div>
+
       <Channel
         messages={messages}
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         handleSendMessage={handleSendMessage}
         handleDeleteMessage={handleDeleteMessage}
-        channelName={channelName}
         isAdmin={isAdmin}
-        currentUser={currentUser}
+        channelName={
+          currentChannel && currentChannel.type === "DM"
+            ? currentChannel.name
+                .replace(/_/g, " ")
+                .split(" ")
+                .filter((name) => name !== loggedUser)
+                .join(" ")
+            : currentChannel
+            ? currentChannel.name.replace(/_/g, " ")
+            : ""
+        }
       />
       <Members channelName={channelName} users={users}         isAdmin={isAdmin}
-               currentUser={currentUser} setIsAdmin={setIsAdmin}/>
+               loggedUser={loggedUser} setIsAdmin={setIsAdmin}/>
     </div>
   );
 };
 
-function Channels({ channelName, channels, getChannelData, isAdmin, currentUser }) {
+function UserPanel({ loggedUser, handleLogout }) {
+  return (
+    <div className="user-pannel">
+      <h2>{loggedUser}</h2>
+      <button className="logout-button" onClick={handleLogout}>
+        Logout
+      </button>
+    </div>
+  );
+}
+
+function Channels({ channelName, channels, getChannelData, isAdmin, loggedUser }) {
+  const [channelType, setChannelType] = useState("PC");
+
+  const handleChannelTypeChange = (type) => {
+    console.log("Changing channel type to:", type);
+    setChannelType(type);
+    getChannelData();
+  };
   return (
     <div className="channels">
-      <ChannelsLogo />
+      <ChannelsLogo
+        channelType={channelType}
+        handleChannelTypeChange={handleChannelTypeChange}
+      />
       <ChannelList
         getChannelData={getChannelData}
         channelName={channelName}
         channels={channels}
+        channelType={channelType}
+        loggedUser={loggedUser}
         isAdmin={isAdmin}
-        currentUser={currentUser}
       />
     </div>
   );
 }
 
-function ChannelsLogo() {
+function ChannelsLogo({ channelType, handleChannelTypeChange }) {
+  const [isHovered, setIsHovered] = useState(false);
   return (
     <div className="channels-logo">
-      <h2>CHANNELS</h2>
+      <button
+        className="channel-type-button"
+        onClick={() =>
+          handleChannelTypeChange(channelType === "PC" ? "DM" : "PC")
+        }
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {(isHovered || channelType === "PC") && (
+          <img
+            className="channel-type-img"
+            src={require("../styles/public-icon.png")}
+            alt="Public Channels"
+          ></img>
+        )}
+        {(isHovered || channelType === "DM") && (
+          <img
+            className="channel-type-img"
+            src={require("../styles/private-icon.png")}
+            alt="Private Channels"
+          ></img>
+        )}
+      </button>
+      <h3>CHANNELS</h3>
     </div>
   );
 }
 
-function ChannelList({ channelName, channels, getChannelData, isAdmin, currentUser }) {
+function ChannelList({
+  channelName,
+  channels,
+  getChannelData,
+  channelType,
+  isAdmin,
+  loggedUser,
+}) {
   return (
     <ul className="channel-list">
-      {channels.map((channel, index) => (
-        <ChannelButton
-          channelName={channelName}
-          getChannelData={getChannelData}
-          channelKey={index}
-          channel={channel}
-          isAdmin={isAdmin}
-          currentUser={currentUser}
-        />
-      ))}
-      <NewChannelButton         isAdmin={isAdmin}
-                                currentUser={currentUser}/>
-      <JoinChannelButton currentUser={currentUser}/>
+      {channels
+        .filter((channel) => channel.type === channelType)
+        .map((channel, index) => (
+          <ChannelButton
+            channelName={channelName}
+            getChannelData={getChannelData}
+            channelKey={index}
+            channel={channel}
+            isAdmin={isAdmin}
+            loggedUser={loggedUser}
+          />
+        ))}
+        <NewChannelButton         isAdmin={isAdmin}
+                                loggedUser={loggedUser}/>
+      <JoinChannelButton loggedUser={loggedUser}/>
+      <NewChannelButton />
     </ul>
   );
 }
 
-function ChannelButton({ channelName, channelKey, channel, isAdmin, currentUser }) {
-    const navigate = useNavigate();
-
-    const handleDeleteChannel = async () => {
+function ChannelButton({
+  channelName,
+  getChannelData,
+  channelKey,
+  channel,
+  isAdmin,
+  loggedUser,
+}) {
+  const navigate = useNavigate();
+  
+  const handleDeleteChannel = async () => {
         // Call the backend API to delete the channel
         try {
             const response = await axios.delete(
@@ -193,39 +316,51 @@ function ChannelButton({ channelName, channelKey, channel, isAdmin, currentUser 
             handleDeleteChannel();
         }
     };
-
-    return (
-        <li
-            className={channelName === channel.name.replace(/_/g, " ")
-                ? "channel-button channel-button-active"
-                : "channel-button"
-            }
-            key={channelKey}
-        >
-            <button
-                className={channelName === channel.name.replace(/_/g, " ")
-                    ? "button button-active"
-                    : "button"
-                }
-                onClick={() => {
-                    console.log(`Navigating to channel: ${channel.name} (channelName: ${channelName})`);
-                    navigate(`/channel/${channel.name}`);
-                }}
-            >
-                {channel.name.replace(/_/g, " ")}
-            </button>
-            {/* Button to delete channel, only visible to admins and not available for the General channel */}
+  
+  return (
+    <li
+      className={
+        channelName === channel.name.replace(/_/g, " ")
+          ? "channel-button channel-button-active"
+          : "channel-button"
+      }
+      key={channelKey}
+    >
+      <button
+        className={
+          channelName === channel.name.replace(/_/g, " ")
+            ? "button button-active"
+            : "button"
+        }
+        style={{ fontWeight: "bold" }}
+        onClick={() => {
+          console.log(
+            `Navigating to channel: ${channel.name} (channelName: ${channelName}) (Channel type: ${channel.type})`
+          );
+          navigate(`/channel/${channel.name}`);
+        }}
+      >
+        {channel.type === "DM"
+          ? channel.name
+              .replace(/_/g, " ")
+              .split(" ")
+              .filter((name) => name !== loggedUser)
+              .join(" ")
+          : channel.name.replace(/_/g, " ")}
+      </button>
+      {/* Button to delete channel, only visible to admins and not available for the General channel */}
             {isAdmin && channel.name !== "General" && (
                 <span
                     className="delete-channel-sign"
                     onClick={confirmDelete}
                 />
             )}
-        </li>
-    );
+    </li>
+  );
+
 }
 
-function NewChannelButton({isAdmin, currentUser}) {
+function NewChannelButton({isAdmin, loggedUser}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [channelName, setChannelName] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
@@ -240,7 +375,7 @@ function NewChannelButton({isAdmin, currentUser}) {
         try {
             await axios.post(
                 "http://localhost:8080/api/channel/create-channel",
-                { formattedChannelName, currentUser },
+                { formattedChannelName, loggedUser },
                 { withCredentials: true }
             );
 
@@ -298,7 +433,7 @@ function NewChannelButton({isAdmin, currentUser}) {
 }
 // For now you have to type in the exact name
 // Reused the NewChannelButton Codes
-function JoinChannelButton({currentUser}){
+function JoinChannelButton({loggedUser}){
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [channelName, setChannelName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -309,7 +444,7 @@ const handleJoinChannel = async () => {
   try {
     await axios.post(
       `http://localhost:8080/api/channel/join`,
-      {formattedChannelName, currentUser},
+      {formattedChannelName, loggedUser},
       { withCredentials: true }
     );
     // Closing modal and resetting input fields
@@ -370,7 +505,7 @@ function Channel({
   handleSendMessage,
   handleDeleteMessage,
   isAdmin,
-  channelName, currentUser
+  channelName, loggedUser
 }) {
   return (
     <div className="channel">
@@ -379,7 +514,8 @@ function Channel({
         messages={messages}
         channelName={channelName}
         handleDeleteMessage={handleDeleteMessage}
-        isAdmin={isAdmin} />
+        isAdmin={isAdmin}
+      />
       <InputBox
         newMessage={newMessage}
         setNewMessage={setNewMessage}
@@ -430,20 +566,34 @@ function Message(props) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <strong>
+      <div className="message-header">
+        <strong>
           {props.sender.username} {props.sender.role === "ADMIN" ? "(Admin)" : ""} - {props.time}
-      </strong>
+        </strong>
+        {
+          // This button only appear when hovered and the current user is an admin
+          isHovered && props.isAdmin && (
+            <DeleteMessage
+              id={props.id}
+              handleDeleteMessage={props.handleDeleteMessage}
+            />
+          )
+        }
+      </div>
       {props.content}
-      {
-      // This button only appear when hovered and the current user is an admin
-      isHovered && props.isAdmin && (
-        <button
-          className="message-delete-button"
-          onClick={() => props.handleDeleteMessage(props.id)} // Call delete function
-        >
-          Delete this message?
-        </button>
-      )}
+    </div>
+  );
+}
+
+function DeleteMessage({ id, handleDeleteMessage }) {
+  return (
+    <div>
+      <button
+        className="message-delete-button"
+        onClick={() => handleDeleteMessage(id)} // Call delete function
+      >
+        Delete
+      </button>
     </div>
   );
 }
@@ -466,7 +616,7 @@ function InputBox({ newMessage, setNewMessage, handleSendMessage }) {
   );
 }
 
-function Members({ channelName, users, isAdmin, currentUser, setIsAdmin}) {
+function Members({ channelName, users, isAdmin, loggedUser, setIsAdmin}) {
   const [active, setActive] = React.useState(false);
 
     const changeUserRole = async (targetUsername, newRole) => {
@@ -476,7 +626,7 @@ function Members({ channelName, users, isAdmin, currentUser, setIsAdmin}) {
                 null,
                 {
                     params: {
-                        currentUsername: currentUser,
+                        currentUsername: loggedUser,
                         targetUsername: targetUsername,
                         newRole: newRole,
                     },
@@ -493,7 +643,7 @@ function Members({ channelName, users, isAdmin, currentUser, setIsAdmin}) {
     return (
     <div className={active ? "members" : "members members-inactive"}>
       <MembersLogo active={active} setActive={setActive} />
-      <MemberList active={active} activeChannel={channelName} users={users} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} setIsAdmin={setIsAdmin}/>
+      <MemberList active={active} activeChannel={channelName} users={users} loggedUser={loggedUser} isAdmin={isAdmin} changeUserRole={changeUserRole} setIsAdmin={setIsAdmin}/>
     </div>
   );
 }
@@ -523,17 +673,17 @@ function MembersLogo({ active, setActive }) {
     );
 }
 
-function MemberList({ active, users, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
+function MemberList({ active, users, loggedUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
   return (
     <ul className="member-list">
       {users.map((member, index) => (
-        <MemberButton active={active} key={index} member={member} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} activeChannel={activeChannel} setIsAdmin={setIsAdmin}/>
+        <MemberButton active={active} key={index} member={member} loggedUser={loggedUser} isAdmin={isAdmin} changeUserRole={changeUserRole} activeChannel={activeChannel} setIsAdmin={setIsAdmin}/>
       ))}
     </ul>
   );
 }
 
-function MemberButton({ member, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
+function MemberButton({ member, loggedUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
     const [adminsCount, setAdminsCount] = useState(0);
     const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
 
