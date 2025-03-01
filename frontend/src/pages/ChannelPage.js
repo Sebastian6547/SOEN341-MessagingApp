@@ -12,13 +12,13 @@ const ChannelPage = () => {
   const [users, setUsers] = useState([]);
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
-    const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
     // Getting current user and check if they are admin
     const fetchCurrentUser = async () => {
         try {
             const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
-            setCurrentUser(response.data.username);
+            setLoggedUser(response.data.username);
 
             // Check if current user is admin
             const adminResponse = await axios.get(
