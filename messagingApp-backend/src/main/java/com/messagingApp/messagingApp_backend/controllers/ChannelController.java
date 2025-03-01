@@ -136,7 +136,7 @@ public class ChannelController {
         }
 
         String channelName = channelData.get("formattedChannelName");
-        String creatorUsername = channelData.get("currentUser");
+        String creatorUsername = channelData.get("loggedUser");
 
         channelService.createChannel(channelName, creatorUsername);
 
