@@ -72,10 +72,10 @@ const ChannelPage = () => {
     }
   };
 
-  const getChannelData = async () => {
+  const getChannelData = async (targetChannel = rawChannelName) => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/channel/${rawChannelName}`,
+        `http://localhost:8080/api/channel/${targetChannel}`,
         { withCredentials: true }
       );
       setMessages(response.data.messages);
@@ -292,6 +292,16 @@ function ChannelButton({
 }) {
   const navigate = useNavigate();
   
+  const handleChannelSwitch = async () => {
+    try {
+      await getChannelData(channel.name); // Wait until data is loaded
+      navigate(`/channel/${channel.name}`); // Switch after loading
+    } catch (err) {
+      console.error("Failed to load channel data:", err);
+    }
+  };
+
+  
   const handleDeleteChannel = async () => {
         // Call the backend API to delete the channel
         try {
@@ -316,7 +326,7 @@ function ChannelButton({
             handleDeleteChannel();
         }
     };
-  
+
   return (
     <li
       className={
@@ -333,12 +343,7 @@ function ChannelButton({
             : "button"
         }
         style={{ fontWeight: "bold" }}
-        onClick={() => {
-          console.log(
-            `Navigating to channel: ${channel.name} (channelName: ${channelName}) (Channel type: ${channel.type})`
-          );
-          navigate(`/channel/${channel.name}`);
-        }}
+        onClick={handleChannelSwitch} // Trigger with wait
       >
         {channel.type === "DM"
           ? channel.name
