@@ -636,9 +636,9 @@ function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, ac
     };
     return (
         <li className={active ? "member-button" : "member-button member-button-inactive"}>
-            <button className="button" onClick={handleClick}>
-                {member.username}
-            </button>
+            {/*<button className="button" onClick={handleClick}>*/}
+            {/*    {member.username}*/}
+            {/*</button>*/}
             {/*{DmOpen && (*/}
             {/*    <div className="messageWindow" ref={messageWindow}>*/}
             {/*        <div className="messageWindow-header">*/}
