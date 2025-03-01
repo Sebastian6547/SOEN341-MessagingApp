@@ -80,24 +80,24 @@ const ChannelPage = () => {
     }
   };
 
-    const handleDeleteMessage = async (messageId) => {
-        const userConfirmed = window.confirm("Are you sure you want to delete this message?");
+  const handleDeleteMessage = async (messageId) => {
+      const userConfirmed = window.confirm("Are you sure you want to delete this message?");
 
-        if (!userConfirmed) {
-            return;
-        }
+      if (!userConfirmed) {
+          return;
+      }
 
-        try {
-            await axios.delete(
-                `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
-                { withCredentials: true }
-            );
-            getChannelData(); // Fetch the latest messages
-        } catch (err) {
-            console.error("Error deleting message:", err);
-        }
-    };
-
+      try {
+          await axios.delete(
+              `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
+              { withCredentials: true }
+          );
+          getChannelData(); // Fetch the latest messages
+      } catch (err) {
+          console.error("Error deleting message:", err);
+      }
+  };
+  
   return (
     <div className="App">
       <Channels
@@ -161,6 +161,7 @@ function ChannelList({ channelName, channels, getChannelData, isAdmin, currentUs
       ))}
       <NewChannelButton         isAdmin={isAdmin}
                                 currentUser={currentUser}/>
+      <JoinChannelButton currentUser={currentUser}/>
     </ul>
   );
 }
@@ -295,7 +296,73 @@ function NewChannelButton({isAdmin, currentUser}) {
         </>
     );
 }
+// For now you have to type in the exact name
+// Reused the NewChannelButton Codes
+function JoinChannelButton({currentUser}){
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [channelName, setChannelName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
+const handleJoinChannel = async () => {
+  console.log("Joining Channel:", channelName);
+  const formattedChannelName = channelName.replace(/ /g, "_");
+  try {
+    await axios.post(
+      `http://localhost:8080/api/channel/join`,
+      {formattedChannelName, currentUser},
+      { withCredentials: true }
+    );
+    // Closing modal and resetting input fields
+    setIsModalOpen(false);
+    setChannelName("");
+    setErrorMessage("");
+  } catch (err) {
+    console.error("Error joining channel:", err);
+    setErrorMessage("Failed to join channel.");
+  }
+
+}
+return (
+    <>
+        {/* Button to join channel, visible to everyone */}
+        {(
+            <li className="channel-button" key={-1} style={{ paddingLeft: "0rem" }}>
+                <button className="new-button" onClick={() => setIsModalOpen(true)}>
+                    + Join a channel
+                </button>
+            </li>
+        )}
+
+        {/* Modal */}
+        {isModalOpen && (
+            <div className="modal-overlay">
+                <div className="modal-content">
+                    <h2>Join an existing Channel</h2>
+
+                    <input
+                        type="text"
+                        placeholder="Enter channel name"
+                        value={channelName}
+                        onChange={(e) => setChannelName(e.target.value)}
+                    />
+
+                    {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+
+                    <div className="modal-buttons">
+                        <button onClick={handleJoinChannel} className="create-btn">
+                            Join Channel
+                        </button>
+                        <button onClick={() => setIsModalOpen(false)} className="cancel-btn">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+    </>
+);
+
+}
 function Channel({
   messages,
   newMessage,
