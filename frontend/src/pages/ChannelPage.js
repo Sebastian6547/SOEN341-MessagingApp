@@ -11,25 +11,34 @@ const ChannelPage = () => {
     const [users, setUsers] = useState([]);
     const [channels, setChannels] = useState([]);
     const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
-    const [loggedInUser, setLoggedInUser] = useState("");
     const [lastMessageTimeStamp, setLastMessageTimeStamp] = useState({});
     const [notifChannel, setNotifChannels] = useState(new Set());
+    const [currentUser, setCurrentUser] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
 
-    const getLoggedInUser = async () => {
+    // Getting current user and check if they are admin
+    const fetchCurrentUser = async () => {
         try {
-            const response = await axios.get("http://localhost:8080/api/auth/check", {
-                withCredentials: true,
-            });
-            setLoggedInUser(response.data.username);
-        } catch (error) {
-            console.error("Error fetching logged-in user:", error);
+            const response = await axios.get("http://localhost:8080/api/auth/check", { withCredentials: true });
+            setCurrentUser(response.data.username);
+
+            // Check if current user is admin
+            const adminResponse = await axios.get(
+                `http://localhost:8080/api/admin/checkAdmin?username=${response.data.username}`
+            );
+            setIsAdmin(adminResponse.data); // Set isAdmin based on the response
+
+            console.log("Current User:", response.data.username);
+            console.log("Is Admin:", adminResponse.data);
+        } catch (err) {
+            console.error("Error fetching current user:", err);
         }
     };
 
   useEffect(() => {
     // Get all channel data from the backend when the channel changes
     getChannelData();
-    getLoggedInUser();
+    fetchCurrentUser();
     // Poll for new messages every 5 seconds
 
     const interval = setInterval(getChannelData, 5000);
@@ -45,7 +54,9 @@ const ChannelPage = () => {
       setMessages(response.data.messages);
       setUsers(response.data.users);
       setChannels(response.data.channels);
-      //console.log(response.data, "channelName: " + channelName);
+      console.log(response.data, "channelName: " + channelName);
+      console.log("Updated channel list:", response.data.channels);
+
         const latestTime = response.data.messages.length > 0
             ? response.data.messages[response.data.messages.length - 1].timestamp
             : null;
@@ -58,8 +69,8 @@ const ChannelPage = () => {
     } catch (err) {
       console.error("Error fetching channel data:", err);
       if (err.response && err.response.status === 403) {
-        alert("You are not a member of this channel.");
-        navigate("/"); // Redirect to home if unauthorized
+        alert("Redirecting to the General channel");
+        navigate("/channel/General"); // Redirect to home if unauthorized
       }
     }
   };
@@ -123,12 +134,32 @@ const ChannelPage = () => {
     }
   };
 
+    const handleDeleteMessage = async (messageId) => {
+        const userConfirmed = window.confirm("Are you sure you want to delete this message?");
+
+        if (!userConfirmed) {
+            return;
+        }
+
+        try {
+            await axios.delete(
+                `http://localhost:8080/api/admin/deleteMessage/${messageId}`,
+                { withCredentials: true }
+            );
+            getChannelData(); // Fetch the latest messages
+        } catch (err) {
+            console.error("Error deleting message:", err);
+        }
+    };
+
   return (
     <div className="App">
       <Channels
         channels={channels}
         channelName={channelName}
         getChannelData={getChannelData}
+        isAdmin={isAdmin}
+        currentUser={currentUser}
         notifChannel = {notifChannel}
       />
       <Channel
@@ -136,15 +167,19 @@ const ChannelPage = () => {
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         handleSendMessage={handleSendMessage}
+        handleDeleteMessage={handleDeleteMessage}
         channelName={channelName}
+        isAdmin={isAdmin}
+        currentUser={currentUser}
       />
-      <Members channelName={channelName} users={users} loggedInUser={loggedInUser}/>
+      <Members channelName={channelName} users={users} isAdmin={isAdmin}
+               currentUser={currentUser} setIsAdmin={setIsAdmin}/>
 
     </div>
   );
 };
 
-function Channels({ channelName, channels, getChannelData, notifChannel }) {
+function Channels({ channelName, channels, getChannelData, isAdmin, currentUser,notifChannel }) {
   return (
     <div className="channels">
       <ChannelsLogo />
@@ -152,6 +187,8 @@ function Channels({ channelName, channels, getChannelData, notifChannel }) {
         getChannelData={getChannelData}
         channelName={channelName}
         channels={channels}
+        isAdmin={isAdmin}
+        currentUser={currentUser}
         notifChannel = {notifChannel}
       />
     </div>
@@ -166,7 +203,7 @@ function ChannelsLogo() {
   );
 }
 
-function ChannelList({ channelName, channels, getChannelData ,notifChannel}) {
+function ChannelList({ channelName, channels, getChannelData, isAdmin, currentUser,notifChannel }) {
   return (
     <ul className="channel-list">
       {channels.map((channel, index) => (
@@ -175,53 +212,146 @@ function ChannelList({ channelName, channels, getChannelData ,notifChannel}) {
           getChannelData={getChannelData}
           channelKey={index}
           channel={channel}
+          isAdmin={isAdmin}
+          currentUser={currentUser}
           notifChannel  = {notifChannel.has(channel.name)}
         />
       ))}
-      <NewChannelButton />
+      <NewChannelButton         isAdmin={isAdmin}
+                                currentUser={currentUser}/>
     </ul>
   );
 }
 
-function ChannelButton({ channelName, getChannelData, channelKey, channel, notifChannel }) {
-  const navigate = useNavigate();
-  //console.log(notifChannel);
-  return (
-    <li
-      className={`
+function ChannelButton({ channelName, channelKey, channel, isAdmin, currentUser, notifChannel }) {
+    const navigate = useNavigate();
+
+    const handleDeleteChannel = async () => {
+        // Call the backend API to delete the channel
+        try {
+            const response = await axios.delete(
+                `http://localhost:8080/api/channel/delete-channel/${channel.name.replace(/ /g, "_")}`
+            );
+            console.log("Channel deleted successfully:", response.data);
+            // If the deleted channel is the current one, navigate to the "general" channel
+            if (window.location.pathname === `/channel/${channel.name.replace(/ /g, "_")}`) {
+                navigate("/channel/General");
+            }
+        } catch (error) {
+            console.error("Error deleting channel:", error);
+        }
+    };
+
+    const confirmDelete = () => {
+        // Show confirmation dialog
+        const isConfirmed = window.confirm(`Are you sure you want to delete the channel ${channel.name.replace(/_/g, " ")}?`);
+
+        if (isConfirmed) {
+            handleDeleteChannel();
+        }
+    };
+    return (
+        <li
+            className={`
         channel-button
         ${channelName === channel.name.replace(/_/g, " ") ? "channel-button-active" : ""}
         ${notifChannel ? "channel-button-notified" : ""} 
       `}
-      key={channelKey}
-    >
-      <button
-        className={
-          channelName === channel.name.replace(/_/g, " ")
-            ? "button button-active"
-            : "button"
-        }
-        style={{ fontWeight: "bold" }}
-        onClick={() => {
-          console.log(
-            `Navigating to channel: ${channel.name} (from channelName: ${channelName})`
-          );
-          navigate(`/channel/${channel.name}`);
-        }}
-      >
-        {channel.name.replace(/_/g, " ")}
-        {/* Replace underscores with spaces */}
-      </button>
-    </li>
-  );
+            key={channelKey}
+        >
+            <button
+                className={channelName === channel.name.replace(/_/g, " ")
+                    ? "button button-active"
+                    : "button"
+                }
+                onClick={() => {
+                    console.log(`Navigating to channel: ${channel.name} (channelName: ${channelName})`);
+                    navigate(`/channel/${channel.name}`);
+                }}
+            >
+                {channel.name.replace(/_/g, " ")}
+            </button>
+            {/* Button to delete channel, only visible to admins and not available for the General channel */}
+            {isAdmin && channel.name !== "General" && (
+                <span
+                    className="delete-channel-sign"
+                    onClick={confirmDelete}
+                />
+            )}
+        </li>
+    );
 }
 
-function NewChannelButton() {
-  return (
-    <li className="channel-button" key={-1} style={{ paddingLeft: "0rem" }}>
-      <button className="new-button">+ create new</button>
-    </li>
-  );
+function NewChannelButton({isAdmin, currentUser}) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [channelName, setChannelName] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const handleCreateChannel = async () => {
+        if (channelName.trim() === "") return;
+
+        const formattedChannelName = channelName.replace(/ /g, "_");
+
+        console.log("Creating channel:", formattedChannelName);
+
+        try {
+            await axios.post(
+                "http://localhost:8080/api/channel/create-channel",
+                { formattedChannelName, currentUser },
+                { withCredentials: true }
+            );
+
+            console.log("Channel Created Successfully");
+
+            // Closing modal and resetting input fields
+            setIsModalOpen(false);
+            setChannelName("");
+            setErrorMessage("");
+        } catch (err) {
+            console.error("Error creating channel:", err);
+            setErrorMessage("Failed to create channel. Try again.");
+        }
+    };
+
+    return (
+        <>
+            {/* Button to create channel, only visible to admins */}
+            {isAdmin && (
+                <li className="channel-button" key={-1} style={{ paddingLeft: "0rem" }}>
+                    <button className="new-button" onClick={() => setIsModalOpen(true)}>
+                        + Create New
+                    </button>
+                </li>
+            )}
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h2>Create a New Channel</h2>
+
+                        <input
+                            type="text"
+                            placeholder="Enter channel name"
+                            value={channelName}
+                            onChange={(e) => setChannelName(e.target.value)}
+                        />
+
+                        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+
+                        <div className="modal-buttons">
+                            <button onClick={handleCreateChannel} className="create-btn">
+                                Create Channel
+                            </button>
+                            <button onClick={() => setIsModalOpen(false)} className="cancel-btn">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
 }
 
 function Channel({
@@ -229,12 +359,18 @@ function Channel({
   newMessage,
   setNewMessage,
   handleSendMessage,
-  channelName,
+  handleDeleteMessage,
+  isAdmin,
+  channelName, currentUser
 }) {
   return (
     <div className="channel">
       <ChannelLogo channelName={channelName} />
-      <Messages messages={messages} channelName={channelName} />
+      <Messages
+        messages={messages}
+        channelName={channelName}
+        handleDeleteMessage={handleDeleteMessage}
+        isAdmin={isAdmin} />
       <InputBox
         newMessage={newMessage}
         setNewMessage={setNewMessage}
@@ -252,7 +388,7 @@ function ChannelLogo({ channelName }) {
   );
 }
 
-function Messages({ messages, channelName }) {
+function Messages({ messages, channelName, handleDeleteMessage, isAdmin }) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -264,9 +400,12 @@ function Messages({ messages, channelName }) {
       {messages.map((msg) => (
         <Message
           key={msg.id}
+          id={msg.id}
           sender={msg.sender}
           content={msg.content}
           time={msg.date_time}
+          handleDeleteMessage={handleDeleteMessage}
+          isAdmin={isAdmin}
         />
       ))}
       <div ref={messagesEndRef} />
@@ -275,12 +414,27 @@ function Messages({ messages, channelName }) {
 }
 
 function Message(props) {
+  const [isHovered, setIsHovered] = useState(false); //Use to check if it is being hovered
   return (
-    <div className="message">
+    <div
+      className="message"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <strong>
-        {props.sender.username} - {props.time}
+          {props.sender.username} {props.sender.role === "ADMIN" ? "(Admin)" : ""} - {props.time}
       </strong>
       {props.content}
+      {
+      // This button only appear when hovered and the current user is an admin
+      isHovered && props.isAdmin && (
+        <button
+          className="message-delete-button"
+          onClick={() => props.handleDeleteMessage(props.id)} // Call delete function
+        >
+          Delete this message?
+        </button>
+      )}
     </div>
   );
 }
@@ -303,163 +457,183 @@ function InputBox({ newMessage, setNewMessage, handleSendMessage }) {
   );
 }
 
-function Members({ channelName, users, loggedInUser }) {
+function Members({ channelName, users, isAdmin, currentUser, setIsAdmin}) {
   const [active, setActive] = React.useState(false);
-  return (
+
+    const changeUserRole = async (targetUsername, newRole) => {
+        try {
+            const response = await axios.put(
+                `http://localhost:8080/api/admin/updateRole`,
+                null,
+                {
+                    params: {
+                        currentUsername: currentUser,
+                        targetUsername: targetUsername,
+                        newRole: newRole,
+                    },
+                    withCredentials: true,
+                }
+            );
+        } catch (err) {
+            console.error("Error changing user role:", err);
+            alert("Failed to change user role.");
+        }
+    };
+
+
+    return (
     <div className={active ? "members" : "members members-inactive"}>
       <MembersLogo active={active} setActive={setActive} />
-      <MemberList active={active} activeChannel={channelName} users={users} loggedInUser={loggedInUser}/>
-       {active && <UserSearch loggedInUser={loggedInUser} />}
+      <MemberList active={active} activeChannel={channelName} users={users} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} setIsAdmin={setIsAdmin}/>
+
+       {active && <UserSearch currentUser={currentUser} />}
     </div>
   );
 }
 
 function MembersLogo({ active, setActive }) {
-  function toggleActive() {
-    setActive(!active);
-  }
-  return (
-    <div className="members-logo">
-      <img
-        className={
-          active
-            ? "members-logo-img"
-            : "members-logo-img members-logo-img-inactive"
-        }
-        src={require("../styles/members-icon.png")}
-        alt="Members Icon"
-        onClick={() => toggleActive()}
-      />
-      <p
-        className={
-          active
-            ? "members-logo-txt"
-            : "members-logo-txt members-logo-txt-inactive"
-        }
-      >
-        MEMBERS
-      </p>
-    </div>
-  );
+    function toggleActive() {
+        setActive(!active);
+    }
+    return (
+        <div className="members-logo">
+            <img
+                className={
+                    active ? "members-logo-img" : "members-logo-img members-logo-img-inactive"
+                }
+                src={require("../styles/members-icon.png")}
+                alt="Members Icon"
+                onClick={toggleActive}
+            />
+            <p
+                className={
+                    active ? "members-logo-txt" : "members-logo-txt members-logo-txt-inactive"
+                }
+            >
+                MEMBERS
+            </p>
+        </div>
+    );
 }
 
-function MemberList({ active, users, loggedInUser }) {
+function MemberList({ active, users, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
   return (
     <ul className="member-list">
       {users.map((member, index) => (
-        <MemberButton active={active} key={index} member={member} loggedInUser={loggedInUser}/>
+        <MemberButton active={active} key={index} member={member} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} activeChannel={activeChannel} setIsAdmin={setIsAdmin}/>
       ))}
     </ul>
   );
 }
 
-function MemberButton({active,member,loggedInUser}) {
+function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
+    const [adminsCount, setAdminsCount] = useState(0);
+    const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
     const [DmOpen, setDmOpen] = useState(false);
     const [message, setMessage] = useState("");
     const messageWindow = useRef(null);
     const navigate = useNavigate();
 
+
     const handleClick = () => {
         setDmOpen(true);
     };
     const handleOutsideClick = (event) => {
-        if(messageWindow.current && !messageWindow.current.contains(event.target)){
+        if (messageWindow.current && !messageWindow.current.contains(event.target)) {
             setDmOpen(false);
         }
     };
-    useEffect(()=> {
-        if(DmOpen){
+    useEffect(() => {
+        if (DmOpen) {
             document.addEventListener("mousedown", handleOutsideClick);
-        }  else{
+        } else {
             document.removeEventListener("mousedown", handleOutsideClick);
         }
-        return()=> document.removeEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, [DmOpen]);
 
     const handleSendMessage = async () => {
-        if(!message.trim()) return;
-        const dmChannelName = loggedInUser < member.username
-            ? `${loggedInUser}_${member.username}`
-            : `${member.username}_${loggedInUser}`;
-        try{
+        if (!message.trim()) return;
+        const dmChannelName = currentUser < member.username
+            ? `${currentUser}_${member.username}`
+            : `${member.username}_${currentUser}`;
+        try {
             await axios.get(`http://localhost:8080/api/channel/${dmChannelName}`,
-                {withCredentials: true
+                {
+                    withCredentials: true
                 });
-        } catch(err){
+        } catch (err) {
             //if 404(DmChannel doesnt exist) create it
-            if(err.response && err.response.status === 404) {
-                try{
+            if (err.response && err.response.status === 404) {
+                try {
                     await axios.post(`http://localhost:8080/api/channel/create-dm-channel`,
-                        {user1: loggedInUser, user2: member.username, channelName: dmChannelName},
+                        {user1: currentUser, user2: member.username, channelName: dmChannelName},
                         {withCredentials: true}
                     );
-                } catch(err){
-                    console.error("Error creating DM channel" , err);
+                } catch (err) {
+                    console.error("Error creating DM channel", err);
                     return;
                 }
-            }
-            else{
-                console.error("Error checking the channel" ,  err);
+            } else {
+                console.error("Error checking the channel", err);
                 return;
-                }
-
             }
 
-            try {
-                await axios.post(
-                    `http://localhost:8080/api/channel/${dmChannelName}/sendMessage`, {
+        }
+
+        try {
+            await axios.post(
+                `http://localhost:8080/api/channel/${dmChannelName}/sendMessage`, {
                     content: message
-                },{withCredentials:true});
-                setMessage(""); // Clear the input after sending
-                setDmOpen(false);
-                navigate(`/channel/${dmChannelName}`);
-            }
-            catch(err) {
-                console.error("Error sending the message" , err);
+                }, {withCredentials: true});
+            setMessage(""); // Clear the input after sending
+            setDmOpen(false);
+            navigate(`/channel/${dmChannelName}`);
+        } catch (err) {
+            console.error("Error sending the message", err);
         }
 
     };
-// const handleOLDCLICK = async () => {
-    //     if (!loggedInUser || !member.username){
-    //         console.error("logged in user error", loggedInUser, " and member" , member.username);
-    //         return;
-    //     }
-    //     console.error("clicked on user", member.username);
-    //     const dmChannelName = loggedInUser < member.username
-    //         ? `${loggedInUser}_${member.username}`
-    //         : `${member.username}_${loggedInUser}`;
-    //     try {
-    //         const response = await axios.get(`http://localhost:8080/api/channel/${dmChannelName}`, {
-    //             withCredentials: true,
-    //         });
-    //
-    //         if (response.status === 200) {
-    //             console.log("DM channel exists, navigating...");
-    //             navigate(`/channel/${dmChannelName}`);
-    //         }
-    //     } catch (err) {
-    //         console.log("tried to connect to DM");
-    //         if (err.response && err.response.status === 404) {
-    //             console.log("DM channel does not exist, creating one...");
-    //             try {
-    //                 await axios.post(
-    //                     `http://localhost:8080/api/channel/create-dm-channel`,
-    //                     { user1: loggedInUser, user2: member.username , channelName: dmChannelName},
-    //                     { withCredentials: true }
-    //                 );
-    //
-    //                 console.log("DM channel created, navigating...");
-    //                 navigate(`/channel/${dmChannelName}`);
-    //             } catch (createErr) {
-    //                 console.error("Error creating DM channel:", createErr);
-    //             }
-    //         } else {
-    //             console.error("Error failed to catch", err);
-    //         }
-    //     }
-    // };
+    // Get the number of admins in the channel
+    const fetchAdminsCount = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/channel/admins-count/${activeChannel}`);
+            const data = await response.json();
+            setAdminsCount(data.adminsCount); // Update the state with fetched value
+            console.log(adminsCount)
+        } catch (error) {
+            console.error("Error fetching admins count:", error);
+        }
+    };
 
-    // No profile pictures are planned, but we can think about adding like a set of default pp to choose from
+    // Call fetchAdminsCount to get the initial admin count
+    useEffect(() => {
+        fetchAdminsCount();
+    }, [activeChannel]);  // Re-fetch if the channel name changes
+
+    // Handling the role toggle
+    const handleToggleChange = async () => {
+        const newRole = isAdminRole ? "MEMBER" : "ADMIN";
+
+        // Fetch the latest admins count to make sure it is updated before making changes
+        await fetchAdminsCount();
+
+        // Check if we are trying to remove the last admin (because there should always be at least one admin in a channel)
+        if (newRole === "MEMBER" && adminsCount <= 1) {
+            alert("You cannot remove the last admin.");
+            return;
+        }
+
+        // Do the role change if it's valid
+        if (window.confirm(`Are you sure you want to make ${member.username} ${newRole === "ADMIN" ? "an Admin" : "a Member"}?`)) {
+            changeUserRole(member.username, newRole);
+
+            // Get the updated admin count again
+            await fetchAdminsCount();
+
+            setIsAdminRole(!isAdminRole); // Toggle the role state immediately
+        }
+    };
     return (
         <li className={active ? "member-button" : "member-button member-button-inactive"}>
             <button className="button" onClick={handleClick}>
@@ -469,7 +643,7 @@ function MemberButton({active,member,loggedInUser}) {
                 <div className="messageWindow" ref={messageWindow}>
                     <div className="messageWindow-header">
 
-                        <img src={require("../styles/members-icon.png")} alt={member.username} className="user-icon" />
+                        <img src={require("../styles/members-icon.png")} alt={member.username} className="user-icon"/>
                         <span>{member.username}</span>
                     </div>
                     <input
@@ -481,68 +655,69 @@ function MemberButton({active,member,loggedInUser}) {
                     <button onClick={handleSendMessage}>Send</button>
                 </div>
             )}
+            <div className="member-info">
+
+                <span className="username">{member.username}</span>
+
+                {/* Show the toggle only if the current user is an admin */}
+                {isAdmin && (
+                    <div className="role-toggle-container">
+                        {/* For the toggle -> left is "Member" and right is "Admin" */}
+                        <label className="role-toggle">
+                            <span className="role-label">Member</span>
+                            <input
+                                type="checkbox"
+                                checked={isAdminRole}
+                                onChange={handleToggleChange}
+                            />
+                            <span className="role-label">Admin</span>
+                        </label>
+                    </div>
+                )}
+            </div>
         </li>
-
-        // <li
-        //   className={
-        //     active ? "member-button" : "member-button member-button-inactive"
-        //   }
-        //
-        // >
-        //   <button
-        //     className="button"
-        //     style={{
-        //       borderRadius: "50px",
-        //       paddingLeft: "0.5rem",
-        //     }}
-        //     onClick={handleClick}
-        //   >
-        //     {member.username}
-        //   </button>
-        // </li>
     );
-}
-function UserSearch(active, loggedInUser){
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
-
-    const handleSearch = async () =>{
-
-        try{
-            const response = await axios.get(`http://localhost:8080/api/channel/users/search?query=${searchQuery}`,
-                {withCredentials: true,
-                });
-            setSearchResults(response.data);
-        }catch(err){
-            console.error("No user found: ", err);
-            setSearchResults([]);
-        }
-    };
-
-    if(!active){
-        console.log("Search is hidden")
-        return null;
     }
+    function UserSearch(active, currentUser) {
+        const [searchQuery, setSearchQuery] = useState("");
+        const [searchResults, setSearchResults] = useState([]);
 
-    return (
-        <div className={active ? "user-search" : "user-search user-search-inactive"}>
-            <input
-                type="text"
-                placeholder="Find user..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button onClick={handleSearch}>Search</button>
-            <ul>
-                {searchResults.map((user) => (
-                    <MemberButton active={active} key={user.username} member={user} loggedInUser={loggedInUser.loggedInUser}/>
-                ))}
-            </ul>
-        </div>
-    );
-}
+        const handleSearch = async () => {
 
+            try {
+                const response = await axios.get(`http://localhost:8080/api/channel/users/search?query=${searchQuery}`,
+                    {
+                        withCredentials: true,
+                    });
+                setSearchResults(response.data);
+            } catch (err) {
+                console.error("No user found: ", err);
+                setSearchResults([]);
+            }
+        };
 
+        if (!active) {
+            console.log("Search is hidden")
+            return null;
+        }
 
+        return (
+            <div className={active ? "user-search" : "user-search user-search-inactive"}>
+                <input
+                    type="text"
+                    placeholder="Find user..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button onClick={handleSearch}>Search</button>
+                <ul>
+                    {searchResults.map((user) => (
+                        <MemberButton active={active} key={user.username} member={user}
+                                      currentUser={currentUser.currentUser}/>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
 
 export default ChannelPage;
