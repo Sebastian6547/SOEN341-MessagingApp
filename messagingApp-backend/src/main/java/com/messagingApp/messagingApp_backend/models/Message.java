@@ -9,7 +9,8 @@ public class Message {
     private Channel channel;
     private LocalDateTime timestamp;
 
-    public Message(String content, User sender, Channel channel, LocalDateTime timestamp) {
+    public Message(long id,String content, User sender, Channel channel, LocalDateTime timestamp) {
+        this.id = id;
         this.content = content;
         this.sender = sender;
         this.channel = channel;
