@@ -62,10 +62,10 @@ const ChannelPage = () => {
             : null;
       //take current loaded channel mark most recent message as seen
         console.log("Last message on this channel was sent at ", latestTime);
-      lastSeenMessage(rawChannelName,latestTime);
+      //lastSeenMessage(rawChannelName,latestTime);
       //Update
         console.log("fetching all channels for new messages");
-      checkNewMessage();
+      //checkNewMessage();
     } catch (err) {
       console.error("Error fetching channel data:", err);
       if (err.response && err.response.status === 403) {
@@ -639,22 +639,22 @@ function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, ac
             <button className="button" onClick={handleClick}>
                 {member.username}
             </button>
-            {DmOpen && (
-                <div className="messageWindow" ref={messageWindow}>
-                    <div className="messageWindow-header">
+            {/*{DmOpen && (*/}
+            {/*    <div className="messageWindow" ref={messageWindow}>*/}
+            {/*        <div className="messageWindow-header">*/}
 
-                        <img src={require("../styles/members-icon.png")} alt={member.username} className="user-icon"/>
-                        <span>{member.username}</span>
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Send a message..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                    />
-                    <button onClick={handleSendMessage}>Send</button>
-                </div>
-            )}
+            {/*            <img src={require("../styles/members-icon.png")} alt={member.username} className="user-icon"/>*/}
+            {/*            <span>{member.username}</span>*/}
+            {/*        </div>*/}
+            {/*        <input*/}
+            {/*            type="text"*/}
+            {/*            placeholder="Send a message..."*/}
+            {/*            value={message}*/}
+            {/*            onChange={(e) => setMessage(e.target.value)}*/}
+            {/*        />*/}
+            {/*        <button onClick={handleSendMessage}>Send</button>*/}
+            {/*    </div>*/}
+            {/*)}*/}
             <div className="member-info">
 
                 <span className="username">{member.username}</span>
