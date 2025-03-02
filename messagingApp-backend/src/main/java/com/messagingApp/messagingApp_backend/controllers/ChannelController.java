@@ -157,7 +157,7 @@ public class ChannelController {
         }
 
         String channelName = channelData.get("formattedChannelName");
-        String creatorUsername = channelData.get("currentUser");
+        String creatorUsername = channelData.get("loggedUser");
 
         channelService.createChannel(channelName, creatorUsername);
 
@@ -178,7 +178,23 @@ public class ChannelController {
         }
     }
 
+    @PostMapping("/join")
+    public ResponseEntity<?> joinChannel(@RequestBody Map<String, String> channelData, HttpSession session) {
+        String username = authService.getLoggedInUser(session);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+        }
 
+        String channelName = channelData.get("formattedChannelName");
+
+        System.out.println("Channel joined successfully: " + channelName + " by " + username);
+        boolean result = channelService.joinChannel(channelName, username);
+        if (result) {
+            return ResponseEntity.ok("Channel joined successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: Failed to join channel.");
+        }
+    }
 
 
 

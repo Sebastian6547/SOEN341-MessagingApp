@@ -254,6 +254,17 @@ public class ChannelService {
         System.out.println("Channel deleted successfully: " + channelName);
         return rowsAffected;
     }
+    public boolean joinChannel(String channelName, String username) {
+        System.out.println("Trying to join channel: " + channelName);
+        String sql = "INSERT INTO user_channel (username, channel_name) VALUES (?, ?)";
+        int rowsAffected = executeUpdate(sql,"Error joining the server", username, channelName);
+        if (rowsAffected <= 0) {
+            System.out.println("Error: Failed to join channel");
+            return false;
+        }
+        System.out.println(username + " joined channel successfully: " + channelName);
+        return true;
+    }
 
 
     // Default method to get data from the database

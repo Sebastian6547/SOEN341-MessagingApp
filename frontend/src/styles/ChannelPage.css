@@ -24,6 +24,14 @@ button {
   overflow: hidden;
 }
 
+.sidebar {
+  height: 100%;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 .channels {
   height: 80%;
   width: 14rem;
@@ -38,14 +46,48 @@ button {
 }
 
 .channels-logo {
+  position: relative;
   height: 3.5rem;
-  width: fit-content;
+  width: 90%;
   border-radius: 50px;
   display: flex;
   align-items: center;
   margin: 8% 0 8% 0;
-  padding: 2% 3% 2% 3%;
   background-color: rgb(255, 255, 255);
+  text-indent: 70%;
+}
+
+.channel-type-button {
+  position: absolute;
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: 50px;
+  background-color: #34a3e4;
+  border: none;
+  font-size: 1.2rem;
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  transition: background-color 0.3s ease-in-out, width 0.1s ease-in-out;
+}
+
+.channel-type-button:hover {
+  background-color: #5a5a5a;
+  width: 7rem;
+  border-radius: 50px;
+  transition: background-color 0.3s ease-in-out, width 0.1s ease-in-out;
+}
+
+.channel-type-img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+.channel-type-img:hover {
+  width: 2rem;
+  height: 2rem;
+  background-color: #34a3e4;
+  border-radius: 50%;
 }
 
 .channel-list {
@@ -136,6 +178,25 @@ button {
   transform: scale(1.15);
 }
 
+.user-pannel {
+  height: 7%;
+  min-height: 4rem;
+  width: 17rem;
+  background-color: rgb(145, 145, 145);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 30px 30px 0 0;
+  border: #7c7c7c 0.3rem solid;
+  border-width: 0.3rem 0.3rem 0rem 0.3rem;
+  color: black;
+}
+
+.logout-button {
+  width: fit-content;
+}
+
 .channel {
   z-index: 1;
   height: 93%;
@@ -168,15 +229,37 @@ button {
 
 .message {
   height: fit-content;
-  min-height: 3.5rem;
+  min-height: 3.7rem;
   width: 90%;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   margin: 10px 10px 10px 5%;
   padding: 10px 10px 10px 15px;
   background-color: #f0f0f0;
   border-radius: 30px;
   text-align: left;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.message-delete-button {
+  height: 0.8rem;
+  width: 4rem;
+  background-color: #34a3e4;
+  border-radius: 1rem;
+  border: none;
+  cursor: pointer;
+  color: black;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
 }
 
 .input-box {
