@@ -692,6 +692,10 @@ function MemberButton({ member, loggedUser, isAdmin, changeUserRole, activeChann
     const [adminsCount, setAdminsCount] = useState(0);
     const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
 
+    useEffect(() => {
+      setIsAdminRole(member.role === "ADMIN");
+  }, [member.role]);  // Reacts to changes in `member.role`
+
     // Get the number of admins in the channel
     const fetchAdminsCount = async () => {
         try {
@@ -724,7 +728,7 @@ function MemberButton({ member, loggedUser, isAdmin, changeUserRole, activeChann
 
         // Do the role change if it's valid
         if (window.confirm(`Are you sure you want to make ${member.username} ${newRole === "ADMIN" ? "an Admin" : "a Member"}?`)) {
-            changeUserRole(member.username, newRole);
+            await changeUserRole(member.username, newRole);
 
             // Get the updated admin count again
             await fetchAdminsCount();
