@@ -61,10 +61,10 @@ const ChannelPage = () => {
             ? response.data.messages[response.data.messages.length - 1].timestamp
             : null;
       //take current loaded channel mark most recent message as seen
-        console.log("Last message on this channel was sent at ", latestTime);
+        //console.log("Last message on this channel was sent at ", latestTime);
       //lastSeenMessage(rawChannelName,latestTime);
       //Update
-        console.log("fetching all channels for new messages");
+        //console.log("fetching all channels for new messages");
       //checkNewMessage();
     } catch (err) {
       console.error("Error fetching channel data:", err);
@@ -486,7 +486,7 @@ function Members({ channelName, users, isAdmin, currentUser, setIsAdmin}) {
       <MembersLogo active={active} setActive={setActive} />
       <MemberList active={active} activeChannel={channelName} users={users} currentUser={currentUser} isAdmin={isAdmin} changeUserRole={changeUserRole} setIsAdmin={setIsAdmin}/>
 
-       {active && <UserSearch currentUser={currentUser} />}
+       {active && <UserSearch active={active} currentUser={currentUser} users={users} />}
     </div>
   );
 }
@@ -529,71 +529,8 @@ function MemberList({ active, users, currentUser, isAdmin, changeUserRole, activ
 function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
     const [adminsCount, setAdminsCount] = useState(0);
     const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
-    const [DmOpen, setDmOpen] = useState(false);
-    const [message, setMessage] = useState("");
-    const messageWindow = useRef(null);
-    const navigate = useNavigate();
 
 
-    const handleClick = () => {
-        setDmOpen(true);
-    };
-    const handleOutsideClick = (event) => {
-        if (messageWindow.current && !messageWindow.current.contains(event.target)) {
-            setDmOpen(false);
-        }
-    };
-    useEffect(() => {
-        if (DmOpen) {
-            document.addEventListener("mousedown", handleOutsideClick);
-        } else {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        }
-        return () => document.removeEventListener("mousedown", handleOutsideClick);
-    }, [DmOpen]);
-
-    const handleSendMessage = async () => {
-        if (!message.trim()) return;
-        const dmChannelName = currentUser < member.username
-            ? `${currentUser}_${member.username}`
-            : `${member.username}_${currentUser}`;
-        try {
-            await axios.get(`http://localhost:8080/api/channel/${dmChannelName}`,
-                {
-                    withCredentials: true
-                });
-        } catch (err) {
-            //if 404(DmChannel doesnt exist) create it
-            if (err.response && err.response.status === 404) {
-                try {
-                    await axios.post(`http://localhost:8080/api/channel/create-dm-channel`,
-                        {user1: currentUser, user2: member.username, channelName: dmChannelName},
-                        {withCredentials: true}
-                    );
-                } catch (err) {
-                    console.error("Error creating DM channel", err);
-                    return;
-                }
-            } else {
-                console.error("Error checking the channel", err);
-                return;
-            }
-
-        }
-
-        try {
-            await axios.post(
-                `http://localhost:8080/api/channel/${dmChannelName}/sendMessage`, {
-                    content: message
-                }, {withCredentials: true});
-            setMessage(""); // Clear the input after sending
-            setDmOpen(false);
-            navigate(`/channel/${dmChannelName}`);
-        } catch (err) {
-            console.error("Error sending the message", err);
-        }
-
-    };
     // Get the number of admins in the channel
     const fetchAdminsCount = async () => {
         try {
@@ -636,29 +573,8 @@ function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, ac
     };
     return (
         <li className={active ? "member-button" : "member-button member-button-inactive"}>
-            {/*<button className="button" onClick={handleClick}>*/}
-            {/*    {member.username}*/}
-            {/*</button>*/}
-            {/*{DmOpen && (*/}
-            {/*    <div className="messageWindow" ref={messageWindow}>*/}
-            {/*        <div className="messageWindow-header">*/}
-
-            {/*            <img src={require("../styles/members-icon.png")} alt={member.username} className="user-icon"/>*/}
-            {/*            <span>{member.username}</span>*/}
-            {/*        </div>*/}
-            {/*        <input*/}
-            {/*            type="text"*/}
-            {/*            placeholder="Send a message..."*/}
-            {/*            value={message}*/}
-            {/*            onChange={(e) => setMessage(e.target.value)}*/}
-            {/*        />*/}
-            {/*        <button onClick={handleSendMessage}>Send</button>*/}
-            {/*    </div>*/}
-            {/*)}*/}
             <div className="member-info">
-
                 <span className="username">{member.username}</span>
-
                 {/* Show the toggle only if the current user is an admin */}
                 {isAdmin && (
                     <div className="role-toggle-container">
@@ -678,12 +594,57 @@ function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, ac
         </li>
     );
     }
-    function UserSearch(active, currentUser) {
+    function UserSearch({active, currentUser, users}) {
         const [searchQuery, setSearchQuery] = useState("");
         const [searchResults, setSearchResults] = useState([]);
 
-        const handleSearch = async () => {
+        const navigate = useNavigate();
+        // const handleClick = () => {
+        //     setDmOpen(true);
+        // };
+        // const handleOutsideClick = (event) => {
+        //     if (messageWindow.current && !messageWindow.current.contains(event.target)) {
+        //         setDmOpen(false);
+        //     }
+        // };
+        // useEffect(() => {
+        //     if (DmOpen) {
+        //         document.addEventListener("mousedown", handleOutsideClick);
+        //     } else {
+        //         document.removeEventListener("mousedown", handleOutsideClick);
+        //     }
+        //     return () => document.removeEventListener("mousedown", handleOutsideClick);
+        // }, [DmOpen]);
 
+        const NavChannel = async ({currentUser, userUsername}) => {
+            //if (!message.trim()) return;
+            console.log("navigate to DM with ", userUsername)
+            const dmChannelName = currentUser < userUsername
+                ? `${currentUser}_${userUsername}`
+                : `${userUsername}_${currentUser}`;
+            try {
+                await axios.get(`http://localhost:8080/api/channel/${dmChannelName}`,
+                    {
+                        withCredentials: true
+                    });
+            } catch (err) {
+                //if 404(DmChannel doesnt exist) create it
+                if (err.response && err.response.status === 404) {
+                    try {
+                        await axios.post(`http://localhost:8080/api/channel/create-dm-channel`,
+                            {user1: currentUser, user2: userUsername, channelName: dmChannelName},
+                            {withCredentials: true}
+                        );
+                    } catch (err) {
+                        console.error("Error creating DM channel", err);
+                    }
+                } else {
+                    console.error("Error checking the channel", err);
+                }
+            }
+            navigate(`/channel/${dmChannelName}`);
+        }
+        const handleSearch = async () => {
             try {
                 const response = await axios.get(`http://localhost:8080/api/channel/users/search?query=${searchQuery}`,
                     {
@@ -696,12 +657,8 @@ function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, ac
             }
         };
 
-        if (!active) {
-            console.log("Search is hidden")
-            return null;
-        }
-
         return (
+
             <div className={active ? "user-search" : "user-search user-search-inactive"}>
                 <input
                     type="text"
@@ -712,8 +669,20 @@ function MemberButton({ active, member, currentUser, isAdmin, changeUserRole, ac
                 <button onClick={handleSearch}>Search</button>
                 <ul>
                     {searchResults.map((user) => (
-                        <MemberButton active={active} key={user.username} member={user}
-                                      currentUser={currentUser.currentUser}/>
+                    <div
+                        key = {user.username}
+                        onClick ={() => {
+                            if(currentUser !== user.username) {
+                                NavChannel({currentUser,userUsername: user.username})
+                            }
+                            else {
+                                console.log("tried talking to myself");
+                            }
+                        }}
+                        >
+                        {user.username}
+                    </div>
+
                     ))}
                 </ul>
             </div>
