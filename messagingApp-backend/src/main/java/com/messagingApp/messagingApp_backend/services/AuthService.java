@@ -81,4 +81,7 @@ public class AuthService {
         System.out.println("Logging out user: " + session.getAttribute("loggedInUser"));
         session.invalidate();
     }
+    public static Connection establishConnection() throws SQLException{
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
 }
