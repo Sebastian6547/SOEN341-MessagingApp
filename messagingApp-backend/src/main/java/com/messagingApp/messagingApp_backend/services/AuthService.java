@@ -11,9 +11,9 @@ public class AuthService {
     // Load .env variables
     private static final Dotenv dotenv = Dotenv.load();
 
-    private static final String DB_URL = dotenv.get("DB_URL");
-    private static final String DB_USER = dotenv.get("DB_USER");
-    private static final String DB_PASSWORD = dotenv.get("DB_PASSWORD");
+    private static final String DB_URL = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : dotenv.get("DB_URL");
+    private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : dotenv.get("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : dotenv.get("DB_PASSWORD");
 
     // Check if combination of username and password is valid
     public boolean authenticateUser(String username, String password, HttpSession session) {
