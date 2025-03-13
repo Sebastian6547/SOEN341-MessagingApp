@@ -18,11 +18,19 @@ public class ChannelService {
     // These methods are used by the channel controller to get data from the service layer
     // Load .env variables
 
-    private static final Dotenv dotenv = Dotenv.load();
+    private static final Dotenv dotenv = Dotenv.configure()
+            .ignoreIfMissing()
+            .load();
 
     private static final String DB_URL = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : dotenv.get("DB_URL");
     private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : dotenv.get("DB_USER");
     private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : dotenv.get("DB_PASSWORD");
+
+    static {
+        System.out.println("Loaded DB_URL: " + (DB_URL != null && !DB_URL.isEmpty() ? "✔" : "❌"));
+        System.out.println("Loaded DB_USER: " + (DB_USER != null && !DB_USER.isEmpty() ? "✔" : "❌"));
+        System.out.println("Loaded DB_PASSWORD: " + (DB_PASSWORD != null && !DB_PASSWORD.isEmpty() ? "✔" : "❌"));
+    }
 
     // Get all channels
     public List<Channel> getAllChannels() {
