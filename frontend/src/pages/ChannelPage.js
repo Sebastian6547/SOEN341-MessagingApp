@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/ChannelPage.css";
@@ -13,7 +13,8 @@ const ChannelPage = () => {
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
   const [isAdmin, setIsAdmin] = useState(false);
-
+    const [lastMessageTimeStamp, setLastMessageTimeStamp] = useState({});
+    const [notifChannel, setNotifChannels] = useState(new Set());
     // Getting current user and check if they are admin
     const fetchCurrentUser = async () => {
         try {
@@ -40,6 +41,7 @@ const ChannelPage = () => {
     getChannelData();
     fetchCurrentUser();
     // Poll for new messages every 5 seconds
+
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
@@ -83,6 +85,16 @@ const ChannelPage = () => {
       setChannels(response.data.channels);
       console.log(response.data, "channelName: " + channelName);
       console.log("Updated channel list:", response.data.channels);
+
+        const latestTime = response.data.messages.length > 0
+            ? response.data.messages[response.data.messages.length - 1].timestamp
+            : null;
+      //take current loaded channel mark most recent message as seen
+        //console.log("Last message on this channel was sent at ", latestTime);
+      //lastSeenMessage(rawChannelName,latestTime);
+      //Update
+        //console.log("fetching all channels for new messages");
+      //checkNewMessage();
     } catch (err) {
       console.error("Error fetching channel data:", err);
       if (err.response && err.response.status === 403) {
@@ -103,6 +115,47 @@ const ChannelPage = () => {
     }
   };
 
+  //return more recent message in channel
+  const getLatestMessages= async(channelName) =>{
+          try {
+              const response = await axios.get(`http://localhost:8080/api/channel/${channelName}/latest`,
+                  {withCredentials: true}
+              );
+
+              return response.data;
+          }catch(err){
+              console.error("Error getting latest messages",err);
+              return null;
+          }
+  }
+//compare most recent message in every channel with last viewed message in every channel.
+  const checkNewMessage = async() =>{
+      //create a copy so we render once
+      let updatedNotifChannels = new Set(notifChannel);
+      for(const channel of channels){
+
+          console.log(" checking channel", channel.name);
+          const newMessage = await getLatestMessages(channel.name);
+          console.log(" newest message sent at ", newMessage.timestamp);
+          console.log(" last seen message sent at ", lastMessageTimeStamp[channel.name]);
+            //put in the list of channels that require a notification
+          if(newMessage.timestamp > lastMessageTimeStamp[channel.name]){
+              console.log("giving channel ", channel.name, " with a notification");
+              updatedNotifChannels.add(channel.name);
+          }
+          else{
+              //console.log("removing notification from ", channel.name, " message was seen");
+              updatedNotifChannels.delete(channel.name);
+          }
+          setNotifChannels(updatedNotifChannels);
+      }
+
+    }
+    const lastSeenMessage = (channelName, timeStamp) => {
+        setLastMessageTimeStamp((prev)=>({
+            ...prev, [channelName]:timeStamp
+        }));
+    };
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return; // Don't send empty messages
     console.log("Sent message:", newMessage);
@@ -153,6 +206,7 @@ const ChannelPage = () => {
           channelName={channelName}
           getChannelData={getChannelData}
           isAdmin={isAdmin}
+          notifChannel = {notifChannel}
           loggedUser={loggedUser}
         />
         <UserPanel loggedUser={loggedUser} handleLogout={handleLogout} />
@@ -194,7 +248,7 @@ function UserPanel({ loggedUser, handleLogout }) {
   );
 }
 
-function Channels({ channelName, channels, getChannelData, isAdmin, loggedUser }) {
+function Channels({ channelName, channels, getChannelData, isAdmin, loggedUser,notifChannel }) {
   const [channelType, setChannelType] = useState("PC");
 
   const handleChannelTypeChange = (type) => {
@@ -215,6 +269,7 @@ function Channels({ channelName, channels, getChannelData, isAdmin, loggedUser }
         channelType={channelType}
         loggedUser={loggedUser}
         isAdmin={isAdmin}
+        notifChannel = {notifChannel}
       />
     </div>
   );
@@ -259,6 +314,7 @@ function ChannelList({
   channelType,
   isAdmin,
   loggedUser,
+  notifChannel,
 }) {
   return (
     <ul className="channel-list">
@@ -272,6 +328,7 @@ function ChannelList({
             channel={channel}
             isAdmin={isAdmin}
             loggedUser={loggedUser}
+            notifChannel  = {notifChannel.has(channel.name)}
           />
         ))}
         <NewChannelButton         isAdmin={isAdmin}
@@ -289,9 +346,10 @@ function ChannelButton({
   channel,
   isAdmin,
   loggedUser,
+  notifChannel,
 }) {
   const navigate = useNavigate();
-  
+
   const handleChannelSwitch = async () => {
     try {
       await getChannelData(channel.name); // Wait until data is loaded
@@ -301,7 +359,7 @@ function ChannelButton({
     }
   };
 
-  
+
   const handleDeleteChannel = async () => {
         // Call the backend API to delete the channel
         try {
@@ -329,11 +387,11 @@ function ChannelButton({
 
   return (
     <li
-      className={
-        channelName === channel.name.replace(/_/g, " ")
-          ? "channel-button channel-button-active"
-          : "channel-button"
-      }
+        className={`
+        channel-button
+        ${channelName === channel.name.replace(/_/g, " ") ? "channel-button-active" : "channel-button"}
+        ${notifChannel ? "channel-button-notified" : ""} 
+      `}
       key={channelKey}
     >
       <button
@@ -649,6 +707,8 @@ function Members({ channelName, users, isAdmin, loggedUser, setIsAdmin}) {
     <div className={active ? "members" : "members members-inactive"}>
       <MembersLogo active={active} setActive={setActive} />
       <MemberList active={active} activeChannel={channelName} users={users} loggedUser={loggedUser} isAdmin={isAdmin} changeUserRole={changeUserRole} setIsAdmin={setIsAdmin}/>
+
+       {active && <UserSearch active={active} loggedUser={loggedUser} users={users} />}
     </div>
   );
 }
@@ -688,7 +748,7 @@ function MemberList({ active, users, loggedUser, isAdmin, changeUserRole, active
   );
 }
 
-function MemberButton({ member, loggedUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
+function MemberButton({ active, member, loggedUser, isAdmin, changeUserRole, activeChannel, setIsAdmin }) {
     const [adminsCount, setAdminsCount] = useState(0);
     const [isAdminRole, setIsAdminRole] = useState(member.role === "ADMIN");
 
@@ -736,13 +796,10 @@ function MemberButton({ member, loggedUser, isAdmin, changeUserRole, activeChann
             setIsAdminRole(!isAdminRole); // Toggle the role state immediately
         }
     };
-
     return (
-        <li className="member-button">
+        <li className={active ? "member-button" : "member-button member-button-inactive"}>
             <div className="member-info">
-
                 <span className="username">{member.username}</span>
-
                 {/* Show the toggle only if the current user is an admin */}
                 {isAdmin && (
                     <div className="role-toggle-container">
@@ -761,6 +818,100 @@ function MemberButton({ member, loggedUser, isAdmin, changeUserRole, activeChann
             </div>
         </li>
     );
-}
+    }
+    function UserSearch({active, loggedUser, users}) {
+        const [searchQuery, setSearchQuery] = useState("");
+        const [searchResults, setSearchResults] = useState([]);
+
+        const navigate = useNavigate();
+        // const handleClick = () => {
+        //     setDmOpen(true);
+        // };
+        // const handleOutsideClick = (event) => {
+        //     if (messageWindow.current && !messageWindow.current.contains(event.target)) {
+        //         setDmOpen(false);
+        //     }
+        // };
+        // useEffect(() => {
+        //     if (DmOpen) {
+        //         document.addEventListener("mousedown", handleOutsideClick);
+        //     } else {
+        //         document.removeEventListener("mousedown", handleOutsideClick);
+        //     }
+        //     return () => document.removeEventListener("mousedown", handleOutsideClick);
+        // }, [DmOpen]);
+
+        const NavChannel = async ({loggedUser, userUsername}) => {
+            //if (!message.trim()) return;
+            console.log("navigate to DM with ", userUsername)
+            const dmChannelName = loggedUser < userUsername
+                ? `${loggedUser}_${userUsername}`
+                : `${userUsername}_${loggedUser}`;
+            try {
+                await axios.get(`http://localhost:8080/api/channel/${dmChannelName}`,
+                    {
+                        withCredentials: true
+                    });
+            } catch (err) {
+                //if 404(DmChannel doesnt exist) create it
+                if (err.response && err.response.status === 404) {
+                    try {
+                        await axios.post(`http://localhost:8080/api/channel/create-dm-channel`,
+                            {user1: loggedUser, user2: userUsername, channelName: dmChannelName},
+                            {withCredentials: true}
+                        );
+                    } catch (err) {
+                        console.error("Error creating DM channel", err);
+                    }
+                } else {
+                    console.error("Error checking the channel", err);
+                }
+            }
+            navigate(`/channel/${dmChannelName}`);
+        }
+        const handleSearch = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8080/api/channel/users/search?query=${searchQuery}`,
+                    {
+                        withCredentials: true,
+                    });
+                setSearchResults(response.data);
+            } catch (err) {
+                console.error("No user found: ", err);
+                setSearchResults([]);
+            }
+        };
+
+        return (
+
+            <div className={active ? "user-search" : "user-search user-search-inactive"}>
+                <input
+                    type="text"
+                    placeholder="Find user..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button onClick={handleSearch}>Search</button>
+                <ul>
+                    {searchResults.map((user) => (
+                    <div
+                        key = {user.username}
+                        onClick ={() => {
+                            if(loggedUser !== user.username) {
+                                NavChannel({loggedUser,userUsername: user.username})
+                            }
+                            else {
+                                console.log("tried talking to myself");
+                            }
+                        }}
+                        >
+                        {user.username}
+                    </div>
+
+                    ))}
+                </ul>
+            </div>
+        );
+    }
 
 export default ChannelPage;
