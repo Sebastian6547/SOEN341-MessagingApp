@@ -164,7 +164,7 @@ public class ChannelService {
         String query = """
         SELECT u.username, u.role
         FROM users u
-        WHERE username ILIKE ?
+        WHERE LOWER(username) LIKE LOWER(?)
         """;
         String search = "%" + input + "%";
         List<Map<String,Object>> result = executeQuery(query, search);
