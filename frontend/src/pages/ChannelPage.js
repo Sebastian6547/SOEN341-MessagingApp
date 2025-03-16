@@ -42,13 +42,13 @@ const ChannelPage = () => {
     // Get all channel data from the backend when the channel changes
     // Poll for new messages every 5 seconds
     getChannelData();
-    //Update channel type state when the channel changes
 
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
 
   useEffect(() => {
+    //Update channel type state when the channel changes
     const currentChannel = channels.find(
       (channel) => channel.name === rawChannelName
     );
