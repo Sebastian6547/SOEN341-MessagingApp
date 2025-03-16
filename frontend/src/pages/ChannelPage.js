@@ -16,7 +16,7 @@ const ChannelPage = () => {
   const [lastMessageTimeStamp, setLastMessageTimeStamp] = useState({});
   const [notifChannel, setNotifChannels] = useState(new Set());
   // Getting current user and check if they are admin
-  const fetchCurrentUser = async () => {
+  const getUserData = async () => {
     try {
       const response = await axios.get("http://localhost:8080/api/auth/check", {
         withCredentials: true,
@@ -40,40 +40,23 @@ const ChannelPage = () => {
     // Get logged user data when the page is loaded
     getUserData();
     // Get all channel data from the backend when the channel changes
-    getChannelData();
-    fetchCurrentUser();
     // Poll for new messages every 5 seconds
+    getChannelType();
+    getChannelData();
+    //Update channel type state when the channel changes
 
     const interval = setInterval(getChannelData, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
 
-  //Check for admin when the page is loaded
-  const getUserData = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/api/auth/check", {
-        withCredentials: true,
-      });
-      const user = response.data;
-      setLoggedUser(user.username);
-      console.log("Logged User:", loggedUser);
-    } catch (error) {
-      console.error("Error fetching user status:", error);
+  const getChannelType = () => {
+    while (!currentChannel) {
+      setTimeout(() => {
+        console.log("waiting for currentChannel to be defined");
+      }, 1000);
+      return;
     }
-  };
-
-  const getAdminData = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:8080/api/admin/checkAdmin",
-        { withCredentials: true }
-      );
-      const isAdmin = response.data;
-      console.log("Is Admin:", isAdmin);
-      setIsAdmin(isAdmin);
-    } catch (error) {
-      console.error("Error fetching admin status:", error);
-    }
+    setChannelType(currentChannel.type);
   };
 
   const getChannelData = async (targetChannel = rawChannelName) => {
@@ -203,6 +186,14 @@ const ChannelPage = () => {
     (channel) => channel.name === rawChannelName
   );
 
+  const [channelType, setChannelType] = useState("PC");
+
+  const handleChannelTypeChange = (type) => {
+    console.log("Changing channel type to:", type);
+    setChannelType(type);
+    getChannelData();
+  };
+
   return (
     <div className="App">
       <div className="sidebar">
@@ -213,6 +204,8 @@ const ChannelPage = () => {
           isAdmin={isAdmin}
           notifChannel={notifChannel}
           loggedUser={loggedUser}
+          channelType={channelType}
+          handleChannelTypeChange={handleChannelTypeChange}
         />
         <UserPanel loggedUser={loggedUser} handleLogout={handleLogout} />
       </div>
@@ -265,14 +258,12 @@ function Channels({
   isAdmin,
   loggedUser,
   notifChannel,
+  channelType,
+  handleChannelTypeChange,
 }) {
-  const [channelType, setChannelType] = useState("PC");
-
-  const handleChannelTypeChange = (type) => {
-    console.log("Changing channel type to:", type);
-    setChannelType(type);
-    getChannelData();
-  };
+  console.log("Rendering channels:", channels);
+  console.log("Current channel:", channelName);
+  console.log("Channel type:", channelType);
   return (
     <div className="channels">
       <ChannelsLogo
