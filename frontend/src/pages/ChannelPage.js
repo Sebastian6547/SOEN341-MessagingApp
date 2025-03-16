@@ -41,7 +41,6 @@ const ChannelPage = () => {
     getUserData();
     // Get all channel data from the backend when the channel changes
     // Poll for new messages every 5 seconds
-    getChannelType();
     getChannelData();
     //Update channel type state when the channel changes
 
@@ -49,15 +48,20 @@ const ChannelPage = () => {
     return () => clearInterval(interval); // Cleanup on unmount
   }, [rawChannelName]);
 
-  const getChannelType = () => {
-    while (!currentChannel) {
-      setTimeout(() => {
-        console.log("waiting for currentChannel to be defined");
-      }, 1000);
-      return;
+  useEffect(() => {
+    const currentChannel = channels.find(
+      (channel) => channel.name === rawChannelName
+    );
+
+    if (currentChannel) {
+      console.log("Setting channel type:", currentChannel.type);
+      setChannelType(currentChannel.type);
+    } else {
+      console.log(
+        "Current channel is undefined. Waiting for channels to load..."
+      );
     }
-    setChannelType(currentChannel.type);
-  };
+  }, [channels, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
 
   const getChannelData = async (targetChannel = rawChannelName) => {
     try {
