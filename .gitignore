@@ -89,7 +89,3 @@ yarn-error.log*
 
 *./.env
 .env
-
-*/application.properties
-messagingApp-backend/src/main/resources/application.properties
-application.properties
