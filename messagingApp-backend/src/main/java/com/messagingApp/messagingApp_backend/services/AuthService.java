@@ -1,5 +1,6 @@
 package com.messagingApp.messagingApp_backend.services;
 
+import com.messagingApp.messagingApp_backend.models.User;
 import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpSession;
 import java.sql.*;
@@ -85,5 +86,18 @@ public class AuthService {
     }
     public static Connection establishConnection() throws SQLException{
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
+
+    public void createUser(String username, String password, String role){
+        String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+
+        // Execute the query
+        ServiceUtility.executeUpdate(sql, "Error creating user", username, password, role);
+
+        System.out.println("User created successfully.");
+
+        // Add the user to the general channel by default
+        String channelSql = "INSERT INTO user_channel (channel_name, username) VALUES (?, ?)";
+        ServiceUtility.executeUpdate(channelSql, "Error adding user to channel", "General", username);
     }
 }
