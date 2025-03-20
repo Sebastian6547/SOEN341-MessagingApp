@@ -36,6 +36,10 @@ const ChannelPage = () => {
     }
   };
 
+  const currentChannel = channels.find(
+    (channel) => channel.name === rawChannelName
+  );
+
   useEffect(() => {
     // Get logged user data when the page is loaded
     getUserData();
@@ -56,12 +60,13 @@ const ChannelPage = () => {
     if (currentChannel) {
       console.log("Setting channel type:", currentChannel.type);
       setChannelType(currentChannel.type);
+      console.log("new channel change (type change)");
     } else {
       console.log(
         "Current channel is undefined. Waiting for channels to load..."
       );
     }
-  }, [channels, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
+  }, [currentChannel && currentChannel.type, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
 
   const getChannelData = async (targetChannel = rawChannelName) => {
     try {
@@ -186,16 +191,13 @@ const ChannelPage = () => {
     }
   };
 
-  const currentChannel = channels.find(
-    (channel) => channel.name === rawChannelName
-  );
-
   const [channelType, setChannelType] = useState("PC");
 
   const handleChannelTypeChange = (type) => {
     console.log("Changing channel type to:", type);
     setChannelType(type);
     getChannelData();
+    console.log("handletypechange call");
   };
 
   return (
