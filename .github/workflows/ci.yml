@@ -77,4 +77,4 @@ jobs:
       - name: Run tests
         run: |
           cd frontend
-          npm test -- --watchAll=false || echo "No tests found, skipping..."
+          npm test -- --watchAll=false
