@@ -62,7 +62,12 @@ class AdminServiceTest {
             channelService.executeUpdate(deleteUser, "Error in deleting user", sampleMemberName);
         }
     }
-
+    @Test
+    void isAdminReturnFalseForNonExistingUser() {
+        String sampleMemberName = "SampleMember";
+        // Just assert, do not insert user
+        assertFalse(adminService.isAdmin(sampleMemberName), "Member user should return false");
+    }
 
     @Test
     void updateUserRoleFromAdminToAdmin() {
