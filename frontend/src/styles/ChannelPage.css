@@ -146,7 +146,7 @@ button {
   border-radius: 0 50px 50px 0;
   padding-left: 2rem;
 }
-.channel-button-notified{
+.channel-button-notified {
   background-color: indianred;
 }
 .button-active {
@@ -295,6 +295,7 @@ button {
   padding: 10px;
   display: flex;
   flex-direction: column;
+  align-items: center; /* Center elements horizontally */
   margin-top: 2%;
   border-radius: 30px 0 0 30px;
   position: absolute;
@@ -303,25 +304,12 @@ button {
   z-index: 2;
   border: #7c7c7c 0.3rem solid;
   border-width: 0.3rem 0rem 0.3rem 0.3rem;
-}
-
-.user-search{
-  flex-direction: column;
-  margin-bottom: 2%;
-  width: 15rem;
-  position: absolute;
-  bottom: 20%;
-  right: 0;
-  z-index: 3;
-  background-color: rgb(145, 145, 145);
-  border: #7c7c7c 0.3rem solid;
-  padding: 5px;
-  border-radius: 10px;
-  display: flex;
+  transition: transform 0.3s ease-in-out;
 }
 
 .members-inactive {
   transform: translateX(13rem);
+  transition: transform 0.3s ease-out;
 }
 
 .members-logo {
@@ -387,11 +375,28 @@ button {
   transform: translatex(-2rem);
 }
 
+.members-wrapper {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .member-list {
   list-style-type: none;
   margin: 0;
-  padding: 0;
+  padding-left: 5%;
+  padding-right: 5%;
   overflow-y: auto;
+  background-color: rgb(183, 183, 183, 0.5);
+  border-radius: 20px;
+  height: 65%;
+  margin-bottom: 5%;
+  min-height: 10rem;
+  justify-content: center;
 }
 
 .modal-overlay {
@@ -413,7 +418,8 @@ button {
   width: 300px;
   text-align: center;
 }
-input, select {
+input,
+select {
   width: 100%;
   padding: 8px;
   margin: 10px 0;
@@ -426,7 +432,7 @@ input, select {
   margin-top: 15px;
 }
 .create-btn {
-  background: #007BFF;
+  background: #007bff;
   color: white;
   padding: 8px 15px;
   border: none;
@@ -450,7 +456,8 @@ input, select {
   text-align: center;
 }
 
-input, select {
+input,
+select {
   width: 100%;
   padding: 8px;
   margin: 10px 0;
@@ -465,7 +472,7 @@ input, select {
 }
 
 .create-btn {
-  background: #007BFF;
+  background: #007bff;
   color: white;
   padding: 8px 15px;
   border: none;
@@ -485,7 +492,8 @@ input, select {
 
 .member-button {
   list-style-type: none;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -494,14 +502,59 @@ input, select {
   background-color: #f0f0f0;
   border-radius: 20px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 200px;
+  width: 100%;
+  cursor: pointer;
 }
 
 .member-button-inactive {
-  display: none;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
-.user-search-inactive{
-  display: none;
+
+.user-search {
+  height: 20%;
+  min-height: 11rem;
+  flex-direction: column;
+  margin-top: 8%;
+  margin-bottom: 2%;
+  width: 100%;
+  background-color: #f0f0f0;
+  border: #7c7c7c 0.1rem solid;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  display: flex;
+}
+
+.user-search-inactive {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.search-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 10px;
+  background-color: rgba(125, 125, 125, 0.553);
+  padding-bottom: 2px;
+  border-radius: 10px;
+  overflow-y: auto;
+}
+.search-result {
+  list-style-type: none;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(125, 125, 125, 0.553);
+  width: 95%;
+  cursor: pointer;
 }
 .messageWindow {
   position: absolute;
@@ -629,19 +682,10 @@ input[type="checkbox"]:disabled {
 
 .delete-channel-sign {
   display: block;
-  width: 30px;
+  width: 20px;
   height: 4px;
   background-color: black;
   margin-left: 10px;
   margin-right: 10px;
   cursor: pointer;
 }
-
-
-
-
-
-
-
-
-
