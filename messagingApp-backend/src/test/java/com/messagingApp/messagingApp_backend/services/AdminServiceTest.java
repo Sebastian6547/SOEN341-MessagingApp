@@ -28,7 +28,6 @@ public class AdminServiceTest {
 
     private final String sampleMemberName = "member";
     private final String sampleAdminName = "admin";
-    String adminName = "admin";
     String getMessageId = "SELECT id FROM messages WHERE username = ? AND id = ?";
 
     @Autowired
@@ -74,7 +73,7 @@ public class AdminServiceTest {
     void updateUserRoleFromMemberToMember() {
         assertFalse(adminService.isAdmin(sampleMemberName), "SampleUser is currently member");
         // Change to Member
-        adminService.updateUserRole(adminName, sampleMemberName, "MEMBER");
+        adminService.updateUserRole(sampleAdminName, sampleMemberName, "MEMBER");
         assertFalse(adminService.isAdmin(sampleMemberName), "SampleUser is still member");
 
     }
@@ -84,7 +83,7 @@ public class AdminServiceTest {
         // Insert Member User
         assertTrue(adminService.isAdmin(sampleAdminName), "SampleUser is currently admin");
         // Change to Admin
-        adminService.updateUserRole(adminName, sampleAdminName, "ADMIN");
+        adminService.updateUserRole(sampleAdminName, sampleAdminName, "ADMIN");
         assertTrue(adminService.isAdmin(sampleAdminName), "SampleUser is still admin");
     }
     @Test
@@ -92,7 +91,7 @@ public class AdminServiceTest {
         // Check if currently Admin
         assertTrue(adminService.isAdmin(sampleAdminName), "SampleUser is currently admin");
         // Change to Member
-        adminService.updateUserRole(adminName, sampleAdminName, "MEMBER");
+        adminService.updateUserRole(sampleAdminName, sampleAdminName, "MEMBER");
         assertFalse(adminService.isAdmin(sampleAdminName), "SampleUser is now member");
     }
 
@@ -101,7 +100,7 @@ public class AdminServiceTest {
     void updateUserRoleFromMemberToAdmin() {
         assertFalse(adminService.isAdmin(sampleMemberName), "SampleUser is currently member");
         // Change to Admin
-        adminService.updateUserRole(adminName, sampleMemberName, "ADMIN");
+        adminService.updateUserRole(sampleAdminName, sampleMemberName, "ADMIN");
         assertTrue(adminService.isAdmin(sampleMemberName), "SampleUser is now admin");
     }
 
