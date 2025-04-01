@@ -106,6 +106,7 @@ public class AdminServiceTest {
 
     @Test
     void updateUserRoleRejectNonAdmin(){
+        // Getting the number of row affected
         int rowAffected = adminService.updateUserRole(sampleMemberName, sampleMemberName, "MEMBER");
         assertFalse(rowAffected > 0, "Update should not executed when not admin request");
     }
@@ -124,7 +125,7 @@ public class AdminServiceTest {
     }
     @Test
     void deleteMessageNonExistingMessage() {
-        List<Map<String,Object>> results = ServiceUtility.executeQuery(getMessageId, sampleMemberName, 1);
+        ServiceUtility.executeQuery(getMessageId, sampleMemberName, 1);
         assertTrue(adminService.deleteMessage(1L), "Deleting message should return true");
         // Deleting the message again
         assertFalse(adminService.deleteMessage(1L), "Deleting message should return false");

@@ -116,55 +116,66 @@ public class AuthServiceTest {
     }
     @Test
     void authenticateUserAdmin() {
-        assertNull(session.getAttribute("loggedInUser"));
+        // Ensure no logged in user
+        assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
         authService.authenticateUser(sampleAdminName,sampleAdminPassword,session);
         assertEquals(session.getAttribute("loggedInUser"), sampleAdminName, "Should return" + sampleAdminName);
     }
     @Test
     void authenticateUserMember() {
-        assertNull(session.getAttribute("loggedInUser"));
+        // Ensure no logged in user
+        assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
         authService.authenticateUser(sampleMemberName,sampleMemberPassword,session);
         assertEquals(session.getAttribute("loggedInUser"), sampleMemberName, "Should return" + sampleMemberName);
     }
     @Test
     void authenticateUserNoGivenUsername() {
-        assertNull(session.getAttribute("loggedInUser"));
+        // Ensure no logged in user
+        assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
         authService.authenticateUser("",sampleAdminPassword,session); // Wrong password
         assertNull(session.getAttribute("loggedInUser"), "Should have null loggedInUser");
     }
     @Test
     void authenticateUserWrongPassword() {
-        assertNull(session.getAttribute("loggedInUser"));
+        // Ensure no logged in user
+        assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
         authService.authenticateUser(sampleMemberName,sampleAdminPassword,session); // Wrong password
         assertNull(session.getAttribute("loggedInUser"), "Should have null loggedInUser");
     }
 
     @Test
     void getLoggedInUserMember() {
+        // Set loggedInUser as sampleMemberName
         session.setAttribute("loggedInUser", sampleMemberName);
         assertEquals(sampleMemberName, session.getAttribute("loggedInUser"), "Should return" + sampleMemberName);
     }
     @Test
     void getLoggedInUserAdmin() {
+        // Set loggedInUser as sampleAdminName
         session.setAttribute("loggedInUser", sampleAdminName);
         assertEquals(sampleAdminName, session.getAttribute("loggedInUser"), "Should return" + sampleAdminName);
     }
 
     @Test
     void logoutMember() {
+        // Set loggedInUser as sampleMemberName
         session.setAttribute("loggedInUser", sampleMemberName);
         authService.logout(session);
+        // If invalidated, it will throw Exception
         assertThrows(IllegalStateException.class, () -> session.getAttribute("loggedInUser"), "Should have been invalidated");
     }
     @Test
     void logoutAdmin() {
+        // Set loggedInUser as sampleAdminName
         session.setAttribute("loggedInUser", sampleAdminName);
         authService.logout(session);
+        // If invalidated, it will throw Exception
         assertThrows(IllegalStateException.class, () -> session.getAttribute("loggedInUser"), "Should have been invalidated");
     }
     @Test
     void logoutNotLoggedIn() {
         authService.logout(session);
+        // If invalidated, it will throw Exception
         assertThrows(IllegalStateException.class, () -> session.getAttribute("loggedInUser"), "Should have been invalidated");
     }
 }
