@@ -35,6 +35,14 @@ public class ChannelController {
             return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
         }
         System.out.println("REQUEST by User: " + username+ " for channel: " + channelName);
+
+        //Check channel exists
+        List<Channel> channels = channelService.getAllChannels();
+        boolean isExist = channels.stream().anyMatch(channel -> channel.getName().equals(channelName));
+        if (!isExist) {
+            return ResponseEntity.status(404).body(Map.of("error", "Channel does not exist"));
+        }
+
         //Check if the user is a member of the channel
         List<Channel> userChannels = channelService.getUserChannels(username);
         boolean isMember = userChannels.stream().anyMatch(channel -> channel.getName().equals(channelName));
@@ -104,7 +112,20 @@ public class ChannelController {
         return ResponseEntity.ok(latestMessage);
     }
 
-    // Get all users (used for user search to create DMs with any user)
+    //get from all channels
+//    @GetMapping("/channels")
+//    public ResponseEntity<?> getAllChannels(HttpSession session){
+//        //Check user is logged in
+//        String username = authService.getLoggedInUser(session);
+//        if (username == null) {
+//            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+//        }
+//
+//        //Get all channels
+//        List<Channel> channels = channelService.getAllChannels();
+//        return ResponseEntity.ok(channels);
+//    }
+    // Get all users
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(HttpSession session) {
         //Check user is logged in
@@ -136,7 +157,7 @@ public class ChannelController {
         }
 
         String channelName = channelData.get("formattedChannelName");
-        String creatorUsername = channelData.get("currentUser");
+        String creatorUsername = channelData.get("loggedUser");
 
         channelService.createChannel(channelName, creatorUsername);
 
@@ -157,7 +178,58 @@ public class ChannelController {
         }
     }
 
+    @PostMapping("/join")
+    public ResponseEntity<?> joinChannel(@RequestBody Map<String, String> channelData, HttpSession session) {
+        String username = authService.getLoggedInUser(session);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+        }
+
+        String channelName = channelData.get("formattedChannelName");
+
+        System.out.println("Channel joined successfully: " + channelName + " by " + username);
+        boolean result = channelService.joinChannel(channelName, username);
+        if (result) {
+            return ResponseEntity.ok("Channel joined successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: Failed to join channel.");
+        }
+    }
 
 
 
+    //get users from a search input
+    @GetMapping("/users/search")
+    public ResponseEntity<?> searchUsers(HttpSession session, @RequestParam String query) {
+        //check user logged in
+        String username = authService.getLoggedInUser(session);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+        }
+        //get users based off search
+        List<User> matchUsers = channelService.findUser(query);
+
+        if(matchUsers.size() == 0) {
+            return ResponseEntity.status(404).body(Map.of("error", "no matching users found"));
+        }
+        return ResponseEntity.ok(matchUsers);
+    }
+
+    //Create a channel for DM between 2 users.
+    @PostMapping("/create-dm-channel")
+    public ResponseEntity<?> createDMChannel(@RequestBody Map<String, String> channelData, HttpSession session) {
+        String username = authService.getLoggedInUser(session);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
+        }
+        String user1 = channelData.get("user1");
+        String user2 = channelData.get("user2");
+        String channelName = channelData.get("channelName");
+
+        channelService.createDMChannel(channelName, user1, user2);
+
+        System.out.println("Channel created: " + channelName + " with users " + user1 + " and " + user2);
+
+        return ResponseEntity.ok(Map.of("message", "Channel created successfully"));
+    }
 }

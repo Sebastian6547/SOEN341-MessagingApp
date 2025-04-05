@@ -22,7 +22,7 @@ public class AdminService {
     // Checking if a user is an admin
     public boolean isAdmin(String username) {
         String query = "SELECT role FROM users WHERE username = ?";
-        List<Map<String, Object>> result = channelService.executeQuery(query, username);
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, username);
 
         if (!result.isEmpty()) {
             Object role = result.get(0).get("role");
@@ -38,7 +38,7 @@ public class AdminService {
             String query = "UPDATE users SET role = ? WHERE username = ?";
             String errorMessage = "Error updating user role";
 
-            return channelService.executeUpdate(query, errorMessage, newRole, targetUsername);
+            return ServiceUtility.executeUpdate(query, errorMessage, newRole, targetUsername);
         } else {
             System.out.println("Permission denied: Only admins can update user roles.");
             return 0;
@@ -50,7 +50,7 @@ public class AdminService {
         System.out.println("User is an admin. Deleting this message.");
         String sql = "DELETE FROM messages WHERE id = ?";
 
-        int rowsUpdated = channelService.executeUpdate(sql, "Error Deleting Message", msgId);
+        int rowsUpdated = ServiceUtility.executeUpdate(sql, "Error Deleting Message", msgId);
         if (rowsUpdated > 0) {
             System.out.println("Message deleted successfully.");
             return true;
@@ -59,8 +59,5 @@ public class AdminService {
             return false;
         }
     }
-
-
-
-        }
+}
 

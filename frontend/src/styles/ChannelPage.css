@@ -24,6 +24,14 @@ button {
   overflow: hidden;
 }
 
+.sidebar {
+  height: 100%;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 .channels {
   height: 80%;
   width: 14rem;
@@ -38,14 +46,48 @@ button {
 }
 
 .channels-logo {
+  position: relative;
   height: 3.5rem;
-  width: fit-content;
+  width: 90%;
   border-radius: 50px;
   display: flex;
   align-items: center;
   margin: 8% 0 8% 0;
-  padding: 2% 3% 2% 3%;
   background-color: rgb(255, 255, 255);
+  text-indent: 70%;
+}
+
+.channel-type-button {
+  position: absolute;
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: 50px;
+  background-color: #34a3e4;
+  border: none;
+  font-size: 1.2rem;
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  transition: background-color 0.3s ease-in-out, width 0.1s ease-in-out;
+}
+
+.channel-type-button:hover {
+  background-color: #5a5a5a;
+  width: 7rem;
+  border-radius: 50px;
+  transition: background-color 0.3s ease-in-out, width 0.1s ease-in-out;
+}
+
+.channel-type-img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+.channel-type-img:hover {
+  width: 2rem;
+  height: 2rem;
+  background-color: #34a3e4;
+  border-radius: 50%;
 }
 
 .channel-list {
@@ -104,7 +146,9 @@ button {
   border-radius: 0 50px 50px 0;
   padding-left: 2rem;
 }
-
+.channel-button-notified {
+  background-color: indianred;
+}
 .button-active {
   display: flex;
   justify-content: flex-start;
@@ -132,6 +176,25 @@ button {
 .new-button:hover {
   background-color: #7c7c7c;
   transform: scale(1.15);
+}
+
+.user-pannel {
+  height: 7%;
+  min-height: 4rem;
+  width: 17rem;
+  background-color: rgb(145, 145, 145);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 30px 30px 0 0;
+  border: #7c7c7c 0.3rem solid;
+  border-width: 0.3rem 0.3rem 0rem 0.3rem;
+  color: black;
+}
+
+.logout-button {
+  width: fit-content;
 }
 
 .channel {
@@ -166,15 +229,37 @@ button {
 
 .message {
   height: fit-content;
-  min-height: 3.5rem;
+  min-height: 3.7rem;
   width: 90%;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   margin: 10px 10px 10px 5%;
   padding: 10px 10px 10px 15px;
   background-color: #f0f0f0;
   border-radius: 30px;
   text-align: left;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.message-delete-button {
+  height: 0.8rem;
+  width: 4rem;
+  background-color: #34a3e4;
+  border-radius: 1rem;
+  border: none;
+  cursor: pointer;
+  color: black;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
 }
 
 .input-box {
@@ -204,12 +289,13 @@ button {
 }
 
 .members {
-  height: 92%;
+  height: 80%;
   width: 15rem;
   background-color: rgb(145, 145, 145);
   padding: 10px;
   display: flex;
   flex-direction: column;
+  align-items: center; /* Center elements horizontally */
   margin-top: 2%;
   border-radius: 30px 0 0 30px;
   position: absolute;
@@ -218,10 +304,12 @@ button {
   z-index: 2;
   border: #7c7c7c 0.3rem solid;
   border-width: 0.3rem 0rem 0.3rem 0.3rem;
+  transition: transform 0.3s ease-in-out;
 }
 
 .members-inactive {
   transform: translateX(13rem);
+  transition: transform 0.3s ease-out;
 }
 
 .members-logo {
@@ -287,11 +375,28 @@ button {
   transform: translatex(-2rem);
 }
 
+.members-wrapper {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .member-list {
   list-style-type: none;
   margin: 0;
-  padding: 0;
+  padding-left: 5%;
+  padding-right: 5%;
   overflow-y: auto;
+  background-color: rgb(183, 183, 183, 0.5);
+  border-radius: 20px;
+  height: 65%;
+  margin-bottom: 5%;
+  min-height: 10rem;
+  justify-content: center;
 }
 
 .modal-overlay {
@@ -313,7 +418,8 @@ button {
   width: 300px;
   text-align: center;
 }
-input, select {
+input,
+select {
   width: 100%;
   padding: 8px;
   margin: 10px 0;
@@ -326,7 +432,7 @@ input, select {
   margin-top: 15px;
 }
 .create-btn {
-  background: #007BFF;
+  background: #007bff;
   color: white;
   padding: 8px 15px;
   border: none;
@@ -350,7 +456,8 @@ input, select {
   text-align: center;
 }
 
-input, select {
+input,
+select {
   width: 100%;
   padding: 8px;
   margin: 10px 0;
@@ -365,7 +472,7 @@ input, select {
 }
 
 .create-btn {
-  background: #007BFF;
+  background: #007bff;
   color: white;
   padding: 8px 15px;
   border: none;
@@ -385,7 +492,8 @@ input, select {
 
 .member-button {
   list-style-type: none;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -394,11 +502,107 @@ input, select {
   background-color: #f0f0f0;
   border-radius: 20px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 200px;
+  width: 100%;
+  cursor: pointer;
 }
 
 .member-button-inactive {
-  display: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.user-search {
+  height: 20%;
+  min-height: 11rem;
+  flex-direction: column;
+  margin-top: 8%;
+  margin-bottom: 2%;
+  width: 100%;
+  background-color: #f0f0f0;
+  border: #7c7c7c 0.1rem solid;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  display: flex;
+}
+
+.user-search-inactive {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.search-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 10px;
+  background-color: rgba(125, 125, 125, 0.553);
+  padding-bottom: 2px;
+  border-radius: 10px;
+  overflow-y: auto;
+}
+.search-result {
+  list-style-type: none;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(125, 125, 125, 0.553);
+  width: 95%;
+  cursor: pointer;
+}
+.messageWindow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  width: 250px;
+  text-align: center;
+  z-index: 1000;
+}
+
+.messageWindow-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.user-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: gray;
+}
+
+.messageWindow input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.messageWindow button {
+  width: 100%;
+  padding: 8px;
+  background-color: #34a3e4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.messageWindow button:hover {
+  background-color: #0056b3;
 }
 
 .member-info {
@@ -478,19 +682,10 @@ input[type="checkbox"]:disabled {
 
 .delete-channel-sign {
   display: block;
-  width: 30px;
+  width: 20px;
   height: 4px;
   background-color: black;
   margin-left: 10px;
   margin-right: 10px;
   cursor: pointer;
 }
-
-
-
-
-
-
-
-
-
