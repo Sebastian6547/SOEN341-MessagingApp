@@ -10,8 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,7 +34,7 @@ public class ChannelController {
         if (username == null) {
             return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
         }
-        System.out.println("REQUEST by User: " + username+ " for channel: " + channelName);
+        System.out.println("REQUEST by User: " + username + " for channel: " + channelName);
 
         //Check channel exists
         List<Channel> channels = channelService.getAllChannels();
@@ -54,10 +54,9 @@ public class ChannelController {
         List<User> users = channelService.getUsersInChannel(channelName);
         List<Message> messages = channelService.getMessagesInChannel(channelName);
 
-        return ResponseEntity.ok(Map.of(
-                "channels", userChannels, // All channels the user is in
-                "users", users, // Users in the selected channel
-                "messages", messages // Messages in the selected channel
+        return ResponseEntity.ok(Map.of("channels", userChannels, // All channels the user is in
+            "users", users, // Users in the selected channel
+            "messages", messages // Messages in the selected channel
         ));
     }
 
@@ -112,19 +111,6 @@ public class ChannelController {
         return ResponseEntity.ok(latestMessage);
     }
 
-    //get from all channels
-//    @GetMapping("/channels")
-//    public ResponseEntity<?> getAllChannels(HttpSession session){
-//        //Check user is logged in
-//        String username = authService.getLoggedInUser(session);
-//        if (username == null) {
-//            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
-//        }
-//
-//        //Get all channels
-//        List<Channel> channels = channelService.getAllChannels();
-//        return ResponseEntity.ok(channels);
-//    }
     // Get all users
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(HttpSession session) {
@@ -196,8 +182,6 @@ public class ChannelController {
         }
     }
 
-
-
     //get users from a search input
     @GetMapping("/users/search")
     public ResponseEntity<?> searchUsers(HttpSession session, @RequestParam String query) {
@@ -209,7 +193,7 @@ public class ChannelController {
         //get users based off search
         List<User> matchUsers = channelService.findUser(query);
 
-        if(matchUsers.size() == 0) {
+        if (matchUsers.size() == 0) {
             return ResponseEntity.status(404).body(Map.of("error", "no matching users found"));
         }
         return ResponseEntity.ok(matchUsers);

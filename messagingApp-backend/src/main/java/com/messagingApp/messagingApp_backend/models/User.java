@@ -3,13 +3,9 @@ package com.messagingApp.messagingApp_backend.models;
 import java.util.List;
 
 public class User {
-    public enum UserRole {
-        MEMBER,
-        ADMIN
-    }
-    private String username;
-    private String password;
-    private UserRole role;
+    private final String username;
+    private final String password;
+    private final UserRole role;
     private List<Channel> channels;
 
     public User(String username, String password, UserRole role) {
@@ -52,5 +48,9 @@ public class User {
 
     public boolean hasChannel(String channelName) {
         return this.channels.stream().anyMatch(channel -> channel.getName().equals(channelName));
+    }
+
+    public enum UserRole {
+        MEMBER, ADMIN
     }
 }

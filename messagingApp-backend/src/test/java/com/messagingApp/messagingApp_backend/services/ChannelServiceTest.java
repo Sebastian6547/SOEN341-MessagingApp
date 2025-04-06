@@ -48,9 +48,9 @@ public class ChannelServiceTest {
         List<Channel> channels = channelService.getAllChannels();
 
         // Then
-        assert(channels.size() == 2);
-        assert(channels.get(0).getName().equals("General"));
-        assert(channels.get(1).getName().equals("Help"));
+        assert (channels.size() == 2);
+        assert (channels.get(0).getName().equals("General"));
+        assert (channels.get(1).getName().equals("Help"));
     }
 
     @Test
@@ -65,9 +65,8 @@ public class ChannelServiceTest {
         channelService.createChannel(channelName, username);
 
         // Then
-        Integer countChannels = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM channels WHERE name = ?", Integer.class, channelName);
+        Integer countChannels = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM channels WHERE name = ?", Integer.class, channelName);
 
-        assert(countChannels == 1);
+        assert (countChannels == 1);
     }
 }

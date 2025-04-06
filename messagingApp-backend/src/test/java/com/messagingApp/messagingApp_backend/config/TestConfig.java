@@ -13,9 +13,7 @@ import javax.sql.DataSource;
 public class TestConfig {
     @Bean
     public Dotenv dotenv() {
-        return Dotenv.configure()
-                .ignoreIfMissing()
-                .load();
+        return Dotenv.configure().ignoreIfMissing().load();
     }
 
     @Bean

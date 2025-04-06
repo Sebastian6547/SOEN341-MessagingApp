@@ -32,7 +32,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testCreateUser(){
+    public void testCreateUser() {
         // Given
         String username = "Alice";
         String password = "password";
@@ -42,12 +42,10 @@ public class AuthServiceTest {
         authService.createUser(username, password, role);
 
         /// Then
-        Integer countUsers = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
-        Integer countChannels = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
+        Integer countUsers = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
+        Integer countChannels = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
 
-        assert(countUsers == 1);
-        assert(countChannels == 1);
+        assert (countUsers == 1);
+        assert (countChannels == 1);
     }
 }

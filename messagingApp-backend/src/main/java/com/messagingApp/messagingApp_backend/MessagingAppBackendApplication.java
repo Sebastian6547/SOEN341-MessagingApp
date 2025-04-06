@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class MessagingAppBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MessagingAppBackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(MessagingAppBackendApplication.class, args);
+    }
 
 }

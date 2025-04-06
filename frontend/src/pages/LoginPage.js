@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, {useState} from "react";
+import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import "../styles/LoginPage.css";
 
@@ -15,9 +15,8 @@ const LoginPage = () => {
 
         try {
             const response = await axios.post("http://localhost:8080/api/auth/login", { // Make a POST request to the login endpoint from the backend
-                username,
-                password
-            }, { withCredentials: true }); // for cookies
+                username, password
+            }, {withCredentials: true}); // for cookies
 
             if (response.status === 200) {
                 navigate("/channel/General"); // Redirect to the General channel
@@ -27,8 +26,7 @@ const LoginPage = () => {
         }
     };
 
-    return (
-        <div className="login-container">
+    return (<div className="login-container">
             <h2>Login</h2>
             <form onSubmit={handleLogin}>
                 <input
@@ -48,8 +46,7 @@ const LoginPage = () => {
                 <button type="submit">Login</button>
             </form>
             {error && <p className="error">{error}</p>} {/* Display the error message only if there is an error */}
-        </div>
-    );
+        </div>);
 };
 
 export default LoginPage;
