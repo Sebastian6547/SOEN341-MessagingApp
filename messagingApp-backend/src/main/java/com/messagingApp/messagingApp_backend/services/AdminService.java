@@ -40,6 +40,7 @@ public class AdminService {
         }
     }
 
+    // Deleting a message
     public boolean deleteMessage(Long msgId) {
         System.out.println("Received message delete request for id " + msgId);
         System.out.println("User is an admin. Deleting this message.");

@@ -46,7 +46,6 @@ public class ChannelService {
 
     // Get all channels for a user
     public List<Channel> getUserChannels(String username) {
-        //System.out.println("Fetching all channels for user: " + username + " from the database...");
         String query = """
             SELECT uc.username, uc.channel_name, c.type
             FROM user_channel uc
@@ -64,7 +63,6 @@ public class ChannelService {
 
     // Get all users in a channel
     public List<User> getUsersInChannel(String channelName) {
-        //System.out.println("Fetching all users in channel: " + channelName + " from the database...");
         String query = """
             SELECT uc.username, u.role
             FROM user_channel uc
@@ -82,7 +80,6 @@ public class ChannelService {
 
     // Get all messages in a channel
     public List<Message> getMessagesInChannel(String channelName) {
-        //System.out.println("Fetching all messages in channel: " + channelName + " from the database...");
         // Query gets messages from a specific channel with only the username and role of the sender
         String query = """
             SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
@@ -102,7 +99,6 @@ public class ChannelService {
         }
         return messages;
     }
-
 
     // Get the latest message in a channel
     public Message getLatestMessageInChannel(String channelName) {
@@ -207,6 +203,7 @@ public class ChannelService {
         return rowsAffected;
     }
 
+    // Deleting a channel
     public int deleteChannel(String channelName) {
         System.out.println("Trying to delete channel: " + channelName);
 
@@ -243,6 +240,7 @@ public class ChannelService {
         return rowsAffected;
     }
 
+    // Joining a channel
     public boolean joinChannel(String channelName, String username) {
         System.out.println("Trying to join channel: " + channelName);
         String sql = "INSERT INTO user_channel (username, channel_name) VALUES (?, ?)";
