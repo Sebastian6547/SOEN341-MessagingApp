@@ -13,7 +13,6 @@ const ChannelPage = () => {
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
   const [isAdmin, setIsAdmin] = useState(false);
-  //const [lastMessageTimeStamp, setLastMessageTimeStamp] = useState({});
   const [notifChannels, setNotifChannels] = useState(new Set());
   const [lastMessageID , setLastMessageID] = useState(null);
   const [justSentMessage, setJustSentMessage] = useState(false);
@@ -31,12 +30,16 @@ const ChannelPage = () => {
       );
       setIsAdmin(adminResponse.data); // Set isAdmin based on the response
 
-      //console.log("Current User:", response.data.username);
-      //console.log("Is Admin:", adminResponse.data);
+      console.log("Current User:", response.data.username);
+      console.log("Is Admin:", adminResponse.data);
     } catch (err) {
       console.error("Error fetching current user:", err);
     }
   };
+
+  const currentChannel = channels.find(
+    (channel) => channel.name === rawChannelName
+  );
 
   useEffect(()=>{
     const interval = setInterval(()=>{
@@ -63,15 +66,17 @@ const ChannelPage = () => {
     const currentChannel = channels.find(
       (channel) => channel.name === rawChannelName
     );
+
     if (currentChannel) {
-      //console.log("Setting channel type:", currentChannel.type);
+      console.log("Setting channel type:", currentChannel.type);
       setChannelType(currentChannel.type);
+      console.log("new channel change (type change)");
     } else {
       console.log(
         "Current channel is undefined. Waiting for channels to load..."
       );
     }
-  }, [channels, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
+  }, [currentChannel && currentChannel.type, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
 
   //so user doesnt trigger notif with his own message. Could  make getChannel return the message and then pass message to update.
   useEffect(() => {
@@ -124,7 +129,6 @@ const ChannelPage = () => {
     }catch(err){
       console.error("Error checking for new messages to notify user:", err);
     }
-
   };
 
   const handleSendMessage = async () => {
@@ -169,16 +173,13 @@ const ChannelPage = () => {
     }
   };
 
-  const currentChannel = channels.find(
-    (channel) => channel.name === rawChannelName
-  );
-
   const [channelType, setChannelType] = useState("PC");
 
   const handleChannelTypeChange = (type) => {
     console.log("Changing channel type to:", type);
     setChannelType(type);
     getChannelData();
+    console.log("handletypechange call");
   };
 
   const updateLastSeenMessage = async (msgID) =>{
@@ -265,9 +266,9 @@ function Channels({
   channelType,
   handleChannelTypeChange,
 }) {
-  //console.log("Rendering channels:", channels);
-  //console.log("Current channel:", channelName);
-  //console.log("Channel type:", channelType);
+  console.log("Rendering channels:", channels);
+  console.log("Current channel:", channelName);
+  console.log("Channel type:", channelType);
   return (
     <div className="channels">
       <ChannelsLogo
