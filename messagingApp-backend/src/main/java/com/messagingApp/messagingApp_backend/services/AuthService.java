@@ -1,6 +1,5 @@
 package com.messagingApp.messagingApp_backend.services;
 
-import com.messagingApp.messagingApp_backend.models.User;
 import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpSession;
 import java.sql.*;
@@ -83,9 +82,6 @@ public class AuthService {
     public void logout(HttpSession session) {
         System.out.println("Logging out user: " + session.getAttribute("loggedInUser"));
         session.invalidate();
-    }
-    public static Connection establishConnection() throws SQLException{
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
     public void createUser(String username, String password, String role){
