@@ -112,6 +112,47 @@ public class ChannelService {
         return messages;
     }
 
+    public Long getLastSeenMsg(String username, String channelName){
+        String query = """
+            SELECT last_read_msg_id
+            FROM messages_seen
+            WHERE username = ? AND channel_name = ?
+            """;
+        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, username, channelName);
+        if(!result.isEmpty() && result.get(0).get("last_read_msg_id") != null){
+            return ((Number)result.get(0).get("last_read_msg_id")).longValue();
+        }
+        return 0L;
+    }
+
+    public void updateMessageSeenTable(String username, String channelName, Long lastSeenMsgId){
+        String query = """
+            INSERT INTO messages_seen (username, channel_name, last_read_msg_id)
+            VALUES (?, ?, ?)
+            ON CONFLICT (username, channel_name)
+            DO UPDATE SET last_read_msg_id = EXCLUDED.last_read_msg_id;
+            """;
+
+        ServiceUtility.executeUpdate(query,"Error when updating messages_seen table", username, channelName, lastSeenMsgId);
+    }
+
+    public List<String> getUnreadChannels(String username){
+
+        String query = """
+        SELECT DISTINCT m.channel_name
+        FROM messages m
+        LEFT JOIN messages_seen ms ON m.channel_name = ms.channel_name AND ms.username = ?
+        WHERE ms.last_read_msg_id IS NULL OR m.id > ms.last_read_msg_id;
+        """;
+
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, username);
+
+        List<String> unreadChannels = new ArrayList<>();
+        for(Map<String, Object> row : result){
+            unreadChannels.add((String)row.get("channel_name"));
+        }
+        return unreadChannels;
+    }
 
     // Get the latest message in a channel
     public Message getLatestMessageInChannel(String channelName) {
