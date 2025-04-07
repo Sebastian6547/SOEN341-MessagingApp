@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/channel")
@@ -53,11 +54,13 @@ public class ChannelController {
         //Get channel data
         List<User> users = channelService.getUsersInChannel(channelName);
         List<Message> messages = channelService.getMessagesInChannel(channelName);
+        Long lastMessageID = channelService.getLastSeenMsg(username, channelName);
 
         return ResponseEntity.ok(Map.of(
                 "channels", userChannels, // All channels the user is in
                 "users", users, // Users in the selected channel
-                "messages", messages // Messages in the selected channel
+                "messages", messages, // Messages in the selected channel
+                "lastMessageID", lastMessageID //Last seen message by loggedin User
         ));
     }
 
@@ -213,6 +216,34 @@ public class ChannelController {
             return ResponseEntity.status(404).body(Map.of("error", "no matching users found"));
         }
         return ResponseEntity.ok(matchUsers);
+    }
+
+    @PostMapping("/{channelName}/updateLastSeenMessage")
+    public ResponseEntity<String> updateLastSeenMessage(
+            @PathVariable String channelName,
+            HttpSession session,
+            @RequestBody Map<String, Object> messageData){
+        try {
+            String username = authService.getLoggedInUser(session);
+            Long lastSeenMessageID = ((Number) messageData.get("lastSeenMessageID")).longValue();
+
+            channelService.updateMessageSeenTable(username, channelName, lastSeenMessageID);
+            return ResponseEntity.ok("Last seen message updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating last seen message: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/getUnreadChannels")
+    public ResponseEntity<List<String>> getUnreadChannels(HttpSession session){
+        try{
+            String username = authService.getLoggedInUser(session);
+            List<String> unreadChannels = channelService.getUnreadChannels(username);
+            return ResponseEntity.ok(unreadChannels);
+        }catch(Exception err){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        }
     }
 
     //Create a channel for DM between 2 users.
