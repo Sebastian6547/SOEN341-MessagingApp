@@ -88,6 +88,7 @@ public class AuthService {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
+    // User creation helper method
     public void createUser(String username, String password, String role){
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
 
@@ -99,5 +100,27 @@ public class AuthService {
         // Add the user to the general channel by default
         String channelSql = "INSERT INTO user_channel (channel_name, username) VALUES (?, ?)";
         ServiceUtility.executeUpdate(channelSql, "Error adding user to channel", "General", username);
+    }
+
+    // Register user
+    public int registerUser(String username, String password, String role) {
+        // Check if the role is valid
+        if (!role.equals("MEMBER") && !role.equals("ADMIN")) {
+            System.out.println("Invalid role: " + role);
+            return 1; // Invalid role
+        }
+
+        String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+
+        // Execute the query
+        int rowsAffected = ServiceUtility.executeUpdate(sql, "Error creating user", username, password, role);
+
+        System.out.println("User created successfully.");
+
+        // Add the user to the general channel by default
+        String channelSql = "INSERT INTO user_channel (channel_name, username) VALUES (?, ?)";
+        rowsAffected = rowsAffected + ServiceUtility.executeUpdate(channelSql, "Error adding user to channel", "General", username);
+
+        return rowsAffected; // If both queries are successful, return 2, otherwise return 1
     }
 }
