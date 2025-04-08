@@ -136,8 +136,6 @@ public class ChannelControllerTest {
     @Test
     void sendMessage_UserNotInChannel_ReturnsForbidden() throws Exception {
         MockHttpSession session = new MockHttpSession();
-        User mockUser = new User("testUser", "password", User.UserRole.MEMBER);
-        Channel mockChannel = new Channel("General", Channel.ChannelType.PC);
         session.setAttribute("username", "testUser");
 
         // Mock user session and service call
@@ -187,10 +185,7 @@ public class ChannelControllerTest {
         // Setup dummy session and mock data
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("username", "testUser");
-
-        User mockUser = new User("testUser", "password", User.UserRole.MEMBER);
         Channel mockChannel = new Channel("General", Channel.ChannelType.PC);
-        Message mockMessage = new Message(1, "Latest message", mockUser, mockChannel, LocalDateTime.now());
 
         // Mock dependencies
         Mockito.when(authService.getLoggedInUser(session)).thenReturn("testUser");
@@ -366,8 +361,6 @@ public class ChannelControllerTest {
         // Setup dummy session and mock data
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("username", "testUser");
-
-        User mockUser = new User("testUser", "password", User.UserRole.MEMBER);
 
         // Mock user session and service call
         Mockito.when(authService.getLoggedInUser(session)).thenReturn("testUser");
