@@ -9,11 +9,13 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class AuthService {
 
     // Load .env variables
-    private static final Dotenv dotenv = Dotenv.load();
+    private static final Dotenv dotenv = Dotenv.configure()
+            .ignoreIfMissing()
+            .load();
 
-    private static final String DB_URL = dotenv.get("DB_URL");
-    private static final String DB_USER = dotenv.get("DB_USER");
-    private static final String DB_PASSWORD = dotenv.get("DB_PASSWORD");
+    private static final String DB_URL = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : dotenv.get("DB_URL");
+    private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : dotenv.get("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : dotenv.get("DB_PASSWORD");
 
     // Check if combination of username and password is valid
     public boolean authenticateUser(String username, String password, HttpSession session) {
@@ -81,7 +83,40 @@ public class AuthService {
         System.out.println("Logging out user: " + session.getAttribute("loggedInUser"));
         session.invalidate();
     }
-    public static Connection establishConnection() throws SQLException{
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+
+    // User creation helper method
+    public void createUser(String username, String password, String role){
+        String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+
+        // Execute the query
+        ServiceUtility.executeUpdate(sql, "Error creating user", username, password, role);
+
+        System.out.println("User created successfully.");
+
+        // Add the user to the general channel by default
+        String channelSql = "INSERT INTO user_channel (channel_name, username) VALUES (?, ?)";
+        ServiceUtility.executeUpdate(channelSql, "Error adding user to channel", "General", username);
+    }
+
+    // Register user
+    public int registerUser(String username, String password, String role) {
+        // Check if the role is valid
+        if (!role.equals("MEMBER") && !role.equals("ADMIN")) {
+            System.out.println("Invalid role: " + role);
+            return 1; // Invalid role
+        }
+
+        String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+
+        // Execute the query
+        int rowsAffected = ServiceUtility.executeUpdate(sql, "Error creating user", username, password, role);
+
+        System.out.println("User created successfully.");
+
+        // Add the user to the general channel by default
+        String channelSql = "INSERT INTO user_channel (channel_name, username) VALUES (?, ?)";
+        rowsAffected = rowsAffected + ServiceUtility.executeUpdate(channelSql, "Error adding user to channel", "General", username);
+
+        return rowsAffected; // If both queries are successful, return 2, otherwise return 1
     }
 }

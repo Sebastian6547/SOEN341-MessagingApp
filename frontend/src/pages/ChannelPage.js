@@ -13,8 +13,9 @@ const ChannelPage = () => {
   const [channels, setChannels] = useState([]);
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
   const [isAdmin, setIsAdmin] = useState(false);
-  const [lastMessageTimeStamp, setLastMessageTimeStamp] = useState({});
-  const [notifChannel, setNotifChannels] = useState(new Set());
+  const [notifChannels, setNotifChannels] = useState(new Set());
+  const [lastMessageID , setLastMessageID] = useState(null);
+  const [justSentMessage, setJustSentMessage] = useState(false);
   // Getting current user and check if they are admin
   const getUserData = async () => {
     try {
@@ -40,6 +41,15 @@ const ChannelPage = () => {
   const currentChannel = channels.find(
     (channel) => channel.name === rawChannelName
   );
+
+  useEffect(()=>{
+    const interval = setInterval(()=>{
+     checkNewMessage();
+
+     },15000);
+    return() => clearInterval(interval);
+  }, []);
+
 
   useEffect(() => {
     // Get logged user data when the page is loaded
@@ -69,6 +79,14 @@ const ChannelPage = () => {
     }
   }, [currentChannel && currentChannel.type, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
 
+  //so user doesnt trigger notif with his own message. Could  make getChannel return the message and then pass message to update.
+  useEffect(() => {
+    if (justSentMessage && messages.length > 0) {
+      updateLastSeenMessage(messages[messages.length - 1].id);
+      setJustSentMessage(false); // Reset the flag
+    }
+  }, [messages, justSentMessage]);
+
   const getChannelData = async (targetChannel = rawChannelName) => {
     try {
       const response = await axios.get(
@@ -78,19 +96,9 @@ const ChannelPage = () => {
       setMessages(response.data.messages);
       setUsers(response.data.users);
       setChannels(response.data.channels);
-      console.log(response.data, "channelName: " + channelName);
-      console.log("Updated channel list:", response.data.channels);
-
-      const latestTime =
-        response.data.messages.length > 0
-          ? response.data.messages[response.data.messages.length - 1].timestamp
-          : null;
-      //take current loaded channel mark most recent message as seen
-      //console.log("Last message on this channel was sent at ", latestTime);
-      //lastSeenMessage(rawChannelName,latestTime);
-      //Update
-      //console.log("fetching all channels for new messages");
-      //checkNewMessage();
+      setLastMessageID(response.data.lastMessageID);
+      console.log("last seen message (id) by the user was: " + response.data.lastMessageID );
+      return;
     } catch (err) {
       console.error("Error fetching channel data:", err);
       if (err.response && err.response.status === 403) {
@@ -111,49 +119,19 @@ const ChannelPage = () => {
     }
   };
 
-  //return more recent message in channel
-  const getLatestMessages = async (channelName) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/channel/${channelName}/latest`,
-        { withCredentials: true }
-      );
-
-      return response.data;
-    } catch (err) {
-      console.error("Error getting latest messages", err);
-      return null;
-    }
-  };
   //compare most recent message in every channel with last viewed message in every channel.
   const checkNewMessage = async () => {
-    //create a copy so we render once
-    let updatedNotifChannels = new Set(notifChannel);
-    for (const channel of channels) {
-      console.log(" checking channel", channel.name);
-      const newMessage = await getLatestMessages(channel.name);
-      console.log(" newest message sent at ", newMessage.timestamp);
-      console.log(
-        " last seen message sent at ",
-        lastMessageTimeStamp[channel.name]
-      );
-      //put in the list of channels that require a notification
-      if (newMessage.timestamp > lastMessageTimeStamp[channel.name]) {
-        console.log("giving channel ", channel.name, " with a notification");
-        updatedNotifChannels.add(channel.name);
-      } else {
-        //console.log("removing notification from ", channel.name, " message was seen");
-        updatedNotifChannels.delete(channel.name);
-      }
-      setNotifChannels(updatedNotifChannels);
+    try {
+      const response = await axios.get(`http://localhost:8080/api/channel/getUnreadChannels`,
+          {withCredentials: true,
+      });
+      const channelsNewMsg = response.data;
+      setNotifChannels(new Set(channelsNewMsg));
+    }catch(err){
+      console.error("Error checking for new messages to notify user:", err);
     }
   };
-  const lastSeenMessage = (channelName, timeStamp) => {
-    setLastMessageTimeStamp((prev) => ({
-      ...prev,
-      [channelName]: timeStamp,
-    }));
-  };
+
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return; // Don't send empty messages
     console.log("Sent message:", newMessage);
@@ -166,10 +144,14 @@ const ChannelPage = () => {
         { withCredentials: true }
       );
       setNewMessage(""); // Clear the input after sending
-      getChannelData(); // Fetch the latest messages
+
+      await getChannelData(); // Fetch the latest messages
+      setJustSentMessage(true);
+
     } catch (err) {
       console.error("Error sending message:", err);
     }
+
   };
 
   const handleDeleteMessage = async (messageId) => {
@@ -201,6 +183,19 @@ const ChannelPage = () => {
     console.log("handletypechange call");
   };
 
+  const updateLastSeenMessage = async (msgID) =>{
+    console.log("clicked!, message read , updating table with latest message " + msgID);
+    try{
+      await axios.post(`http://localhost:8080/api/channel/${rawChannelName}/updateLastSeenMessage`,{
+        lastSeenMessageID: msgID,
+      },{withCredentials: true}
+      );
+    }
+    catch(err){
+      console.error('Error updating the last seen message:', err);
+    }
+  };
+
   return (
     <div className="App">
       <div className="sidebar">
@@ -209,7 +204,7 @@ const ChannelPage = () => {
           channelName={channelName}
           getChannelData={getChannelData}
           isAdmin={isAdmin}
-          notifChannel={notifChannel}
+          notifChannels={notifChannels}
           loggedUser={loggedUser}
           channelType={channelType}
           handleChannelTypeChange={handleChannelTypeChange}
@@ -235,6 +230,10 @@ const ChannelPage = () => {
             ? currentChannel.name.replace(/_/g, " ")
             : ""
         }
+        lastMessageID={lastMessageID}
+        setLastMessageID={setLastMessageID}
+        updateLastSeenMessage={updateLastSeenMessage}
+        setNotifChannels={setNotifChannels}
       />
       <Members
         channelName={channelName}
@@ -264,7 +263,7 @@ function Channels({
   getChannelData,
   isAdmin,
   loggedUser,
-  notifChannel,
+  notifChannels,
   channelType,
   handleChannelTypeChange,
 }) {
@@ -284,7 +283,7 @@ function Channels({
         channelType={channelType}
         loggedUser={loggedUser}
         isAdmin={isAdmin}
-        notifChannel={notifChannel}
+        notifChannels={notifChannels}
       />
     </div>
   );
@@ -329,7 +328,7 @@ function ChannelList({
   channelType,
   isAdmin,
   loggedUser,
-  notifChannel,
+  notifChannels,
 }) {
   return (
     <ul className="channel-list">
@@ -343,7 +342,7 @@ function ChannelList({
             channel={channel}
             isAdmin={isAdmin}
             loggedUser={loggedUser}
-            notifChannel={notifChannel.has(channel.name)}
+            notifChannels={notifChannels.has(channel.name)}
           />
         ))}
       {channelType === "PC" && (
@@ -364,7 +363,7 @@ function ChannelButton({
   channel,
   isAdmin,
   loggedUser,
-  notifChannel,
+  notifChannels,
 }) {
   const navigate = useNavigate();
 
@@ -422,7 +421,6 @@ function ChannelButton({
             ? "channel-button-active"
             : "channel-button"
         }
-        ${notifChannel ? "channel-button-notified" : ""} 
       `}
       key={channelKey}
     >
@@ -432,7 +430,7 @@ function ChannelButton({
             ? "button button-active"
             : "button"
         }
-        style={{ fontWeight: "bold" }}
+        style={{ fontWeight: "bold", position:"relative" }}
         onClick={handleChannelSwitch} // Trigger with wait
       >
         {channel.type === "DM"
@@ -442,6 +440,11 @@ function ChannelButton({
               .filter((name) => name !== loggedUser)
               .join(" ")
           : channel.name.replace(/_/g, " ")}
+
+        {notifChannels && (
+            <span className = "channel-button-notification" ></span>
+        )}
+
       </button>
       {/* Button to delete channel, only visible to admins and not available for the General channel */}
       {isAdmin && channel.name !== "General" && (
@@ -688,7 +691,11 @@ function Channel({
   handleDeleteMessage,
   isAdmin,
   channelName,
+  lastMessageID,
+  setLastMessageID,
+  updateLastSeenMessage,
   loggedUser,
+  setNotifChannels,
 }) {
   return (
     <div className="channel">
@@ -698,6 +705,10 @@ function Channel({
         channelName={channelName}
         handleDeleteMessage={handleDeleteMessage}
         isAdmin={isAdmin}
+        lastMessageID={lastMessageID}
+        setLastMessageID={setLastMessageID}
+        updateLastSeenMessage={updateLastSeenMessage}
+        setNotifChannels={setNotifChannels}
       />
       <InputBox
         newMessage={newMessage}
@@ -716,25 +727,48 @@ function ChannelLogo({ channelName }) {
   );
 }
 
-function Messages({ messages, channelName, handleDeleteMessage, isAdmin }) {
+function Messages({ messages, channelName, handleDeleteMessage, isAdmin, lastMessageID , setLastMessageID, updateLastSeenMessage, setNotifChannels}) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [channelName]);
 
+  const handleMessageClick = () =>{
+    if(messages.length ===0) return;
+    // should be the latest message posted on the current channel
+    const latestMsgID = messages[messages.length-1].id;
+    if(lastMessageID !== latestMsgID){
+      setLastMessageID(latestMsgID);
+      console.log("last seen message(handleclick) " + latestMsgID);
+      updateLastSeenMessage(latestMsgID);
+    }
+    // Remove notification when a message is clicked
+    //pass setNotifChannel to Messages to work
+    setNotifChannels((prevNotifChannel) => {
+      const updatedNotifChannel = new Set(prevNotifChannel);
+      updatedNotifChannel.delete(channelName);
+      return updatedNotifChannel;
+    });
+  }
   return (
-    <div className="message-container">
-      {messages.map((msg) => (
-        <Message
-          key={msg.id}
-          id={msg.id}
-          sender={msg.sender}
-          content={msg.content}
-          time={msg.date_time}
-          handleDeleteMessage={handleDeleteMessage}
-          isAdmin={isAdmin}
-        />
+    <div className="message-container" onClick={handleMessageClick}>
+      {messages.map((msg,index) => (
+
+          <div key={msg.id}>
+            <Message
+                key={msg.id}
+                id={msg.id}
+                sender={msg.sender}
+                content={msg.content}
+                time={msg.date_time}
+                handleDeleteMessage={handleDeleteMessage}
+                isAdmin={isAdmin}
+            />
+            { msg.id === lastMessageID && !(index === messages.length -1) &&(
+                <hr style={{ borderColor: "indianred", borderWidth: "1px" }} />
+            )}
+          </div>
       ))}
       <div ref={messagesEndRef} />
     </div>

@@ -49,4 +49,21 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Logout successful"));
     }
 
+    // Register endpoint
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> userDetails) {
+        String username = userDetails.get("username");
+        String password = userDetails.get("password");
+        String role = userDetails.get("role");
+
+        System.out.println("Received registration request: " + username + " | " + password + " | " + role);
+        int rowsAffected = authService.registerUser(username, password, role);
+        if (rowsAffected == 2) {
+            return ResponseEntity.ok(Map.of("message", "Registration successful"));
+        } else if (rowsAffected == 1) {
+            return ResponseEntity.status(400).body(Map.of("error", "Invalid Role"));
+        }
+        return ResponseEntity.status(409).body(Map.of("error", "Error creating user"));
+    }
+
 }
