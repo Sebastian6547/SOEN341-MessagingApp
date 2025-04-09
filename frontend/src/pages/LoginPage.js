@@ -40,6 +40,14 @@ const LoginPage = () => {
 
   return (
     <>
+      <div className="logo-container">
+        <h1>Carrier Pigeon</h1>
+        <img
+          className="carrier-pigeon-logo"
+          src={require("../styles/carrier-pigeon-logo.png")}
+          alt="Carrier Pigeon"
+        ></img>
+      </div>
       <div className="login-container">
         <h2>Login</h2>
         <form onSubmit={handleLogin}>

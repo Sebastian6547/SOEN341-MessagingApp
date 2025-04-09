@@ -16,7 +16,7 @@ const SignupPage = () => {
     e.preventDefault(); //prevent refresh
     setError(""); //reset error before we make the request
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
     try {
@@ -64,7 +64,7 @@ const SignupPage = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="error">{error}</p>}
         <button type="submit">Sign Up</button>
         <p>
           <br />

@@ -14,7 +14,7 @@ const ChannelPage = () => {
   const navigate = useNavigate(); // Use the navigate function to redirect the user to another page
   const [isAdmin, setIsAdmin] = useState(false);
   const [notifChannels, setNotifChannels] = useState(new Set());
-  const [lastMessageID , setLastMessageID] = useState(null);
+  const [lastMessageID, setLastMessageID] = useState(null);
   const [justSentMessage, setJustSentMessage] = useState(false);
   // Getting current user and check if they are admin
   const getUserData = async () => {
@@ -42,14 +42,12 @@ const ChannelPage = () => {
     (channel) => channel.name === rawChannelName
   );
 
-  useEffect(()=>{
-    const interval = setInterval(()=>{
-     checkNewMessage();
-
-     },15000);
-    return() => clearInterval(interval);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkNewMessage();
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
-
 
   useEffect(() => {
     // Get logged user data when the page is loaded
@@ -97,7 +95,9 @@ const ChannelPage = () => {
       setUsers(response.data.users);
       setChannels(response.data.channels);
       setLastMessageID(response.data.lastMessageID);
-      console.log("last seen message (id) by the user was: " + response.data.lastMessageID );
+      console.log(
+        "last seen message (id) by the user was: " + response.data.lastMessageID
+      );
       return;
     } catch (err) {
       console.error("Error fetching channel data:", err);
@@ -122,12 +122,13 @@ const ChannelPage = () => {
   //compare most recent message in every channel with last viewed message in every channel.
   const checkNewMessage = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/channel/getUnreadChannels`,
-          {withCredentials: true,
-      });
+      const response = await axios.get(
+        `http://localhost:8080/api/channel/getUnreadChannels`,
+        { withCredentials: true }
+      );
       const channelsNewMsg = response.data;
       setNotifChannels(new Set(channelsNewMsg));
-    }catch(err){
+    } catch (err) {
       console.error("Error checking for new messages to notify user:", err);
     }
   };
@@ -147,11 +148,9 @@ const ChannelPage = () => {
 
       await getChannelData(); // Fetch the latest messages
       setJustSentMessage(true);
-
     } catch (err) {
       console.error("Error sending message:", err);
     }
-
   };
 
   const handleDeleteMessage = async (messageId) => {
@@ -183,16 +182,20 @@ const ChannelPage = () => {
     console.log("handletypechange call");
   };
 
-  const updateLastSeenMessage = async (msgID) =>{
-    console.log("clicked!, message read , updating table with latest message " + msgID);
-    try{
-      await axios.post(`http://localhost:8080/api/channel/${rawChannelName}/updateLastSeenMessage`,{
-        lastSeenMessageID: msgID,
-      },{withCredentials: true}
+  const updateLastSeenMessage = async (msgID) => {
+    console.log(
+      "clicked!, message read , updating table with latest message " + msgID
+    );
+    try {
+      await axios.post(
+        `http://localhost:8080/api/channel/${rawChannelName}/updateLastSeenMessage`,
+        {
+          lastSeenMessageID: msgID,
+        },
+        { withCredentials: true }
       );
-    }
-    catch(err){
-      console.error('Error updating the last seen message:', err);
+    } catch (err) {
+      console.error("Error updating the last seen message:", err);
     }
   };
 
@@ -430,7 +433,7 @@ function ChannelButton({
             ? "button button-active"
             : "button"
         }
-        style={{ fontWeight: "bold", position:"relative" }}
+        style={{ fontWeight: "bold", position: "relative" }}
         onClick={handleChannelSwitch} // Trigger with wait
       >
         {channel.type === "DM"
@@ -441,10 +444,7 @@ function ChannelButton({
               .join(" ")
           : channel.name.replace(/_/g, " ")}
 
-        {notifChannels && (
-            <span className = "channel-button-notification" ></span>
-        )}
-
+        {notifChannels && <span className="channel-button-notification"></span>}
       </button>
       {/* Button to delete channel, only visible to admins and not available for the General channel */}
       {isAdmin && channel.name !== "General" && (
@@ -599,9 +599,9 @@ function JoinChannelButton({ loggedUser }) {
 
 function NewDMButton({ loggedUser }) {
   const navigate = useNavigate();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [genUsers, setGenUsers] = useState([]);
+
   const fetchGeneralData = async () => {
     try {
       const response = await axios.get(
@@ -664,22 +664,35 @@ function NewDMButton({ loggedUser }) {
           <div className="modal-content">
             <h2>Select A User</h2>
             <ul className="member-list">
-              {genUsers.map((user, index) => (
-                <li
-                  onClick={() =>
-                    createNewDM({ loggedUser, userUsername: user.username })
-                  }
-                  key={index}
-                >
-                  <p>{user.username}</p>
-                </li>
-              ))}
+              {genUsers
+                .filter((user) => user.username !== loggedUser)
+                .map((user, index) => (
+                  <UserDMButton
+                    user={user}
+                    index={index}
+                    loggedUser={loggedUser}
+                    createNewDM={createNewDM}
+                  />
+                ))}
             </ul>
             <button onClick={() => setIsModalOpen(false)}>Close</button>
           </div>
         </div>
       )}
     </>
+  );
+}
+
+function UserDMButton({ user, index, loggedUser, createNewDM }) {
+  return (
+    <li key={index}>
+      <button
+        className="user-dm-button"
+        onClick={() => createNewDM({ loggedUser, userUsername: user.username })}
+      >
+        {user.username}
+      </button>
+    </li>
   );
 }
 
@@ -727,18 +740,27 @@ function ChannelLogo({ channelName }) {
   );
 }
 
-function Messages({ messages, channelName, handleDeleteMessage, isAdmin, lastMessageID , setLastMessageID, updateLastSeenMessage, setNotifChannels}) {
+function Messages({
+  messages,
+  channelName,
+  handleDeleteMessage,
+  isAdmin,
+  lastMessageID,
+  setLastMessageID,
+  updateLastSeenMessage,
+  setNotifChannels,
+}) {
   const messagesEndRef = React.useRef(null);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [channelName]);
 
-  const handleMessageClick = () =>{
-    if(messages.length ===0) return;
+  const handleMessageClick = () => {
+    if (messages.length === 0) return;
     // should be the latest message posted on the current channel
-    const latestMsgID = messages[messages.length-1].id;
-    if(lastMessageID !== latestMsgID){
+    const latestMsgID = messages[messages.length - 1].id;
+    if (lastMessageID !== latestMsgID) {
       setLastMessageID(latestMsgID);
       console.log("last seen message(handleclick) " + latestMsgID);
       updateLastSeenMessage(latestMsgID);
@@ -750,25 +772,24 @@ function Messages({ messages, channelName, handleDeleteMessage, isAdmin, lastMes
       updatedNotifChannel.delete(channelName);
       return updatedNotifChannel;
     });
-  }
+  };
   return (
     <div className="message-container" onClick={handleMessageClick}>
-      {messages.map((msg,index) => (
-
-          <div key={msg.id}>
-            <Message
-                key={msg.id}
-                id={msg.id}
-                sender={msg.sender}
-                content={msg.content}
-                time={msg.date_time}
-                handleDeleteMessage={handleDeleteMessage}
-                isAdmin={isAdmin}
-            />
-            { msg.id === lastMessageID && !(index === messages.length -1) &&(
-                <hr style={{ borderColor: "indianred", borderWidth: "1px" }} />
-            )}
-          </div>
+      {messages.map((msg, index) => (
+        <div key={msg.id}>
+          <Message
+            key={msg.id}
+            id={msg.id}
+            sender={msg.sender}
+            content={msg.content}
+            time={msg.date_time}
+            handleDeleteMessage={handleDeleteMessage}
+            isAdmin={isAdmin}
+          />
+          {msg.id === lastMessageID && !(index === messages.length - 1) && (
+            <hr style={{ borderColor: "indianred", borderWidth: "1px" }} />
+          )}
+        </div>
       ))}
       <div ref={messagesEndRef} />
     </div>

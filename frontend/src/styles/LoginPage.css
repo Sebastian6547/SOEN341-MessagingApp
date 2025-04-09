@@ -1,6 +1,20 @@
+.logo-container {
+  display: flex;
+  justify-content: center;
+  height: 100px;
+  margin-top: 150px;
+  background-color: #007bff;
+  color: white;
+  align-items: center;
+  width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 15px;
+}
+
 .login-container {
   width: 300px;
-  margin: 100px auto;
+  margin: 50px auto;
   text-align: center;
   padding: 20px;
   border-radius: 10px;
@@ -37,4 +51,13 @@ button {
 .error {
   color: red;
   margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.carrier-pigeon-logo {
+  position: fixed;
+  width: 541px;
+  z-index: 1;
+  height: 360px;
+  top: -100px;
 }
