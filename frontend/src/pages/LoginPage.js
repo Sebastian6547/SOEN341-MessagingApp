@@ -33,29 +33,46 @@ const LoginPage = () => {
     }
   };
 
+  const handleSignup = () => {
+    // Redirect to the signup page when the signup link is clicked
+    navigate("/signup");
+  };
+
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      {error && <p className="error">{error}</p>}{" "}
-      {/* Display the error message only if there is an error */}
-    </div>
+    <>
+      <div className="login-container">
+        <h2>Login</h2>
+        <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+        {/* Redirect to the signup page when the signup button is clicked */}
+        {error && <p className="error">{error}</p>}{" "}
+        {/* Display the error message only if there is an error */}
+      </div>
+      <div className="signup-container">
+        <p>Don't have an account yet?</p>
+        <p>
+          <br />
+        </p>
+        <button onClick={handleSignup} className="signup-button">
+          Sign Up
+        </button>
+      </div>
+    </>
   );
 };
 
