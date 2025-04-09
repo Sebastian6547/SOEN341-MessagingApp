@@ -478,6 +478,18 @@ select {
   cursor: pointer;
 }
 
+.user-dm-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #34a3e4;
+  height: 10px;
+  width: 70%;
+  margin: auto;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+
 .cancel-btn {
   background: gray;
   color: white;
