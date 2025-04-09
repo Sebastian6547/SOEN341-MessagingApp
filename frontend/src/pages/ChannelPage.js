@@ -30,6 +30,7 @@ const ChannelPage = () => {
       setIsAdmin(adminResponse.data); // Set isAdmin based on the response
 
       console.log("Current User:", response.data.username);
+      console.log("Logged User:", loggedUser);
       console.log("Is Admin:", adminResponse.data);
     } catch (err) {
       console.error("Error fetching current user:", err);
@@ -66,7 +67,11 @@ const ChannelPage = () => {
         "Current channel is undefined. Waiting for channels to load..."
       );
     }
+<<<<<<< Updated upstream
   }, [currentChannel && currentChannel.type, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
+=======
+  }, [rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
+>>>>>>> Stashed changes
 
   const getChannelData = async (targetChannel = rawChannelName) => {
     try {
@@ -345,9 +350,13 @@ function ChannelList({
             notifChannel={notifChannel.has(channel.name)}
           />
         ))}
-      <NewChannelButton isAdmin={isAdmin} loggedUser={loggedUser} />
-      <JoinChannelButton loggedUser={loggedUser} />
-      <NewChannelButton />
+      {channelType === "PC" && (
+        <>
+          <NewChannelButton isAdmin={isAdmin} loggedUser={loggedUser} />
+          <JoinChannelButton loggedUser={loggedUser} />
+        </>
+      )}
+      {channelType === "DM" && <NewDMButton loggedUser={loggedUser} />}
     </ul>
   );
 }
@@ -588,6 +597,93 @@ function JoinChannelButton({ loggedUser }) {
     </>
   );
 }
+
+function NewDMButton({ loggedUser }) {
+  const navigate = useNavigate();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [genUsers, setGenUsers] = useState([]);
+  const fetchGeneralData = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/channel/General`,
+        { withCredentials: true }
+      );
+      setGenUsers(response.data.users);
+      console.log("Updated user list:", response.data.users);
+    } catch (err) {
+      console.error("Error fetching channel data:", err);
+    }
+  };
+
+  const createNewDM = async ({ loggedUser, userUsername }) => {
+    console.log("loggedUser", loggedUser);
+    console.log("Creating DM with:", userUsername);
+    if (loggedUser === userUsername) {
+      console.log("Tried to create DM with self");
+      alert("You cannot create a DM with yourself.");
+      return;
+    }
+    const dmChannelName =
+      loggedUser < userUsername
+        ? `${loggedUser}_${userUsername}`
+        : `${userUsername}_${loggedUser}`;
+    try {
+      await axios.post(
+        `http://localhost:8080/api/channel/create-dm-channel`,
+        {
+          user1: loggedUser,
+          user2: userUsername,
+          channelName: dmChannelName,
+        },
+        { withCredentials: true }
+      );
+      navigate(`/channel/${dmChannelName}`);
+      setIsModalOpen(false); // Close the modal after creating DM
+    } catch (err) {
+      console.error("Error creating DM channel:", err);
+    }
+  };
+  return (
+    <>
+      {/* Button to create DM */}
+      <li className="channel-button" key={-1} style={{ paddingLeft: "0rem" }}>
+        <button
+          className="new-button"
+          onClick={() => {
+            fetchGeneralData();
+            setIsModalOpen(true);
+          }}
+        >
+          + Create DM
+        </button>
+      </li>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Select A User</h2>
+            <ul className="member-list">
+              {genUsers.map((user, index) => (
+                <li
+                  onClick={() =>
+                    createNewDM({ loggedUser, userUsername: user.username })
+                  }
+                  key={index}
+                >
+                  <p>{user.username}</p>
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => setIsModalOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function Channel({
   messages,
   newMessage,
@@ -660,7 +756,7 @@ function Message(props) {
       <div className="message-header">
         <strong>
           {props.sender.username}{" "}
-          {props.sender.role === "ADMIN" ? "(Admin)" : ""} - {props.time}
+          {props.sender.role === "ADMIN" ? "(Admin)" : ""}
         </strong>
         {
           // This button only appear when hovered and the current user is an admin
@@ -884,20 +980,21 @@ function MemberButton({
       });
     } catch (err) {
       //if 404(DmChannel doesnt exist) create it
+      //-----------FEATURE REMOVED AS OF SPRINT 4-----------
       if (err.response && err.response.status === 404) {
-        try {
-          await axios.post(
-            `http://localhost:8080/api/channel/create-dm-channel`,
-            {
-              user1: loggedUser,
-              user2: userUsername,
-              channelName: dmChannelName,
-            },
-            { withCredentials: true }
-          );
-        } catch (err) {
-          console.error("Error creating DM channel", err);
-        }
+        // try {
+        //   await axios.post(
+        //     `http://localhost:8080/api/channel/create-dm-channel`,
+        //     {
+        //       user1: loggedUser,
+        //       user2: userUsername,
+        //       channelName: dmChannelName,
+        //     },
+        //     { withCredentials: true }
+        //   );
+        // } catch (err) {
+        //   console.error("Error creating DM channel", err);
+        // }
       } else {
         console.error("Error checking the channel", err);
       }
