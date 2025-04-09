@@ -67,11 +67,7 @@ const ChannelPage = () => {
         "Current channel is undefined. Waiting for channels to load..."
       );
     }
-<<<<<<< Updated upstream
   }, [currentChannel && currentChannel.type, rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
-=======
-  }, [rawChannelName]); // Runs whenever `channels` or `rawChannelName` changes
->>>>>>> Stashed changes
 
   const getChannelData = async (targetChannel = rawChannelName) => {
     try {
