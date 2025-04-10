@@ -1,4 +1,5 @@
 package com.messagingApp.messagingApp_backend.controllers;
+
 import com.messagingApp.messagingApp_backend.services.AuthService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -9,9 +10,11 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AuthController.class)
 @ActiveProfiles("test")
@@ -33,21 +36,15 @@ public class AuthControllerTest {
         // Mock authService
         Mockito.when(authService.authenticateUser(username, password, session)).thenReturn(true);
 
-        String requestContent =
-                """
-                {
-                    "username": "testUser",
-                    "password": "testPassword"
-                }
-                """;
+        String requestContent = """
+            {
+                "username": "testUser",
+                "password": "testPassword"
+            }
+            """;
 
         // Perform login request
-        mockMvc.perform(post("/api/auth/login")
-                .session(session)
-                .contentType("application/json")
-                .content(requestContent))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Login successful"));
+        mockMvc.perform(post("/api/auth/login").session(session).contentType("application/json").content(requestContent)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Login successful"));
     }
 
     @Test
@@ -60,21 +57,15 @@ public class AuthControllerTest {
         // Mock authService
         Mockito.when(authService.authenticateUser(username, password, session)).thenReturn(false);
 
-        String requestContent =
-                """
-                {
-                    "username": "wrongUser",
-                    "password": "wrongPassword"
-                }
-                """;
+        String requestContent = """
+            {
+                "username": "wrongUser",
+                "password": "wrongPassword"
+            }
+            """;
 
         // Perform login request
-        mockMvc.perform(post("/api/auth/login")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestContent))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Invalid username or password"));
+        mockMvc.perform(post("/api/auth/login").session(session).contentType(MediaType.APPLICATION_JSON).content(requestContent)).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.error").value("Invalid username or password"));
     }
 
     @Test
@@ -88,10 +79,7 @@ public class AuthControllerTest {
         Mockito.when(authService.getLoggedInUser(session)).thenReturn(username);
 
         // Perform check request
-        mockMvc.perform(get("/api/auth/check")
-                        .session(session))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value(username));
+        mockMvc.perform(get("/api/auth/check").session(session)).andExpect(status().isOk()).andExpect(jsonPath("$.username").value(username));
     }
 
     @Test
@@ -103,10 +91,7 @@ public class AuthControllerTest {
         Mockito.when(authService.getLoggedInUser(session)).thenReturn(null);
 
         // Perform check request
-        mockMvc.perform(get("/api/auth/check")
-                        .session(session))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("User not logged in"));
+        mockMvc.perform(get("/api/auth/check").session(session)).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.error").value("User not logged in"));
     }
 
     @Test
@@ -118,10 +103,7 @@ public class AuthControllerTest {
         Mockito.doNothing().when(authService).logout(session);
 
         // Perform logout request
-        mockMvc.perform(post("/api/auth/logout")
-                        .session(session))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Logout successful"));
+        mockMvc.perform(post("/api/auth/logout").session(session)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Logout successful"));
     }
 
     @Test
@@ -134,21 +116,16 @@ public class AuthControllerTest {
         // Mock authService
         Mockito.when(authService.registerUser(username, password, role)).thenReturn(2);
 
-        String requestContent =
-                """
-                {
-                    "username": "newUser",
-                    "password": "newPassword",
-                    "role": "user"
-                }
-                """;
+        String requestContent = """
+            {
+                "username": "newUser",
+                "password": "newPassword",
+                "role": "user"
+            }
+            """;
 
         // Perform registration request
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestContent))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Registration successful"));
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(requestContent)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Registration successful"));
     }
 
     @Test
@@ -161,21 +138,16 @@ public class AuthControllerTest {
         // Mock authService
         Mockito.when(authService.registerUser(username, password, role)).thenReturn(1);
 
-        String requestContent =
-                """
-                {
-                    "username": "newUser",
-                    "password": "newPassword",
-                    "role": "invalidRole"
-                }
-                """;
+        String requestContent = """
+            {
+                "username": "newUser",
+                "password": "newPassword",
+                "role": "invalidRole"
+            }
+            """;
 
         // Perform registration request
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestContent))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Invalid Role"));
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(requestContent)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.error").value("Invalid Role"));
     }
 
     @Test
@@ -188,20 +160,15 @@ public class AuthControllerTest {
         // Mock authService
         Mockito.when(authService.registerUser(username, password, role)).thenReturn(0);
 
-        String requestContent =
-                """
-                {
-                    "username": "existingUser",
-                    "password": "newPassword",
-                    "role": "user"
-                }
-                """;
+        String requestContent = """
+            {
+                "username": "existingUser",
+                "password": "newPassword",
+                "role": "user"
+            }
+            """;
 
         // Perform registration request
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestContent))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Error creating user"));
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(requestContent)).andExpect(status().isConflict()).andExpect(jsonPath("$.error").value("Error creating user"));
     }
 }

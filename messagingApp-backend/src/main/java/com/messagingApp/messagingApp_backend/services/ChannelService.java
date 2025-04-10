@@ -3,13 +3,14 @@ package com.messagingApp.messagingApp_backend.services;
 import com.messagingApp.messagingApp_backend.models.Channel;
 import com.messagingApp.messagingApp_backend.models.Message;
 import com.messagingApp.messagingApp_backend.models.User;
-import org.springframework.stereotype.Service;
-import com.messagingApp.messagingApp_backend.services.AuthService;
-
-import java.time.LocalDateTime;
 import io.github.cdimascio.dotenv.Dotenv;
-import java.util.*;
-import java.sql.*;
+import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -18,9 +19,7 @@ public class ChannelService {
     // These methods are used by the channel controller to get data from the service layer
     // Load .env variables
 
-    private static final Dotenv dotenv = Dotenv.configure()
-            .ignoreIfMissing()
-            .load();
+    private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
     private static final String DB_URL = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : dotenv.get("DB_URL");
     private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : dotenv.get("DB_USER");
@@ -36,10 +35,10 @@ public class ChannelService {
     public List<Channel> getAllChannels() {
         System.out.println("Fetching all channels from the database...");
 
-        List<Map<String,Object>> result = ServiceUtility.executeQuery("SELECT * FROM channels");
+        List<Map<String, Object>> result = ServiceUtility.executeQuery("SELECT * FROM channels");
         List<Channel> channels = new ArrayList<>();
-        for (Map<String,Object> row : result){
-            Channel channel = new Channel((String)row.get("name"), Channel.ChannelType.valueOf((String)row.get("type")));
+        for (Map<String, Object> row : result) {
+            Channel channel = new Channel((String) row.get("name"), Channel.ChannelType.valueOf((String) row.get("type")));
             channels.add(channel);
         }
         return channels;
@@ -47,17 +46,16 @@ public class ChannelService {
 
     // Get all channels for a user
     public List<Channel> getUserChannels(String username) {
-        //System.out.println("Fetching all channels for user: " + username + " from the database...");
         String query = """
-        SELECT uc.username, uc.channel_name, c.type
-        FROM user_channel uc
-        JOIN channels c ON uc.channel_name = c.name
-        WHERE uc.username = ?
-        """;
-        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, username);
+            SELECT uc.username, uc.channel_name, c.type
+            FROM user_channel uc
+            JOIN channels c ON uc.channel_name = c.name
+            WHERE uc.username = ?
+            """;
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, username);
         List<Channel> channels = new ArrayList<>();
-        for (Map<String,Object> row : result){
-            Channel channel = new Channel((String)row.get("channel_name"), Channel.ChannelType.valueOf((String)row.get("type")));
+        for (Map<String, Object> row : result) {
+            Channel channel = new Channel((String) row.get("channel_name"), Channel.ChannelType.valueOf((String) row.get("type")));
             channels.add(channel);
         }
         return channels;
@@ -65,17 +63,16 @@ public class ChannelService {
 
     // Get all users in a channel
     public List<User> getUsersInChannel(String channelName) {
-        //System.out.println("Fetching all users in channel: " + channelName + " from the database...");
         String query = """
-        SELECT uc.username, u.role
-        FROM user_channel uc
-        JOIN users u ON uc.username = u.username
-        WHERE uc.channel_name = ?
-        """;
-        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, channelName);
+            SELECT uc.username, u.role
+            FROM user_channel uc
+            JOIN users u ON uc.username = u.username
+            WHERE uc.channel_name = ?
+            """;
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, channelName);
         List<User> users = new ArrayList<>();
-        for (Map<String,Object> row : result){
-            User user = new User((String)row.get("username"), null , User.UserRole.valueOf((String)row.get("role"))); // Password set to null because it is not needed
+        for (Map<String, Object> row : result) {
+            User user = new User((String) row.get("username"), null, User.UserRole.valueOf((String) row.get("role"))); // Password set to null because it is not needed
             users.add(user);
         }
         return users;
@@ -83,49 +80,42 @@ public class ChannelService {
 
     // Get all messages in a channel
     public List<Message> getMessagesInChannel(String channelName) {
-        //System.out.println("Fetching all messages in channel: " + channelName + " from the database...");
         // Query gets messages from a specific channel with only the username and role of the sender
         String query = """
-        SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
-        FROM messages m
-        JOIN users u ON m.username = u.username
-        WHERE m.channel_name = ?
-        """;
-        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, channelName);
+            SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
+            FROM messages m
+            JOIN users u ON m.username = u.username
+            WHERE m.channel_name = ?
+            """;
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, channelName);
         List<Message> messages = new ArrayList<>();
         for (Map<String, Object> row : result) {
-            User sender = new User(
-                    (String) row.get("username"),
-                    null, // Password set to null because it is not needed
-                    User.UserRole.valueOf((String) row.get("role"))
-            );
+            User sender = new User((String) row.get("username"), null, // Password set to null because it is not needed
+                User.UserRole.valueOf((String) row.get("role")));
 
-            Message message = new Message(
-                    (int) row.get("id"),
-                    (String) row.get("text"),
-                    sender,
-                    new Channel((String) row.get("channel_name"), null), // Channel type set to null because it is not needed
-                    ((java.sql.Timestamp) row.get("date_time")).toLocalDateTime()
-            );
+            Message message = new Message((int) row.get("id"), (String) row.get("text"), sender, new Channel((String) row.get("channel_name"), null), // Channel type set to null because it is not needed
+                ((java.sql.Timestamp) row.get("date_time")).toLocalDateTime());
             messages.add(message);
         }
         return messages;
     }
 
-    public Long getLastSeenMsg(String username, String channelName){
+    // Get last seen messages
+    public Long getLastSeenMsg(String username, String channelName) {
         String query = """
             SELECT last_read_msg_id
             FROM messages_seen
             WHERE username = ? AND channel_name = ?
             """;
-        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, username, channelName);
-        if(!result.isEmpty() && result.get(0).get("last_read_msg_id") != null){
-            return ((Number)result.get(0).get("last_read_msg_id")).longValue();
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, username, channelName);
+        if (!result.isEmpty() && result.get(0).get("last_read_msg_id") != null) {
+            return ((Number) result.get(0).get("last_read_msg_id")).longValue();
         }
         return 0L;
     }
 
-    public void updateMessageSeenTable(String username, String channelName, Long lastSeenMsgId){
+    // Updating the message seen table
+    public void updateMessageSeenTable(String username, String channelName, Long lastSeenMsgId) {
         String query = """
             INSERT INTO messages_seen (username, channel_name, last_read_msg_id)
             VALUES (?, ?, ?)
@@ -133,23 +123,24 @@ public class ChannelService {
             DO UPDATE SET last_read_msg_id = EXCLUDED.last_read_msg_id;
             """;
 
-        ServiceUtility.executeUpdate(query,"Error when updating messages_seen table", username, channelName, lastSeenMsgId);
+        ServiceUtility.executeUpdate(query, "Error when updating messages_seen table", username, channelName, lastSeenMsgId);
     }
 
-    public List<String> getUnreadChannels(String username){
+    // Get unread channels
+    public List<String> getUnreadChannels(String username) {
 
         String query = """
-        SELECT DISTINCT m.channel_name
-        FROM messages m
-        LEFT JOIN messages_seen ms ON m.channel_name = ms.channel_name AND ms.username = ?
-        WHERE ms.last_read_msg_id IS NULL OR m.id > ms.last_read_msg_id;
-        """;
+            SELECT DISTINCT m.channel_name
+            FROM messages m
+            LEFT JOIN messages_seen ms ON m.channel_name = ms.channel_name AND ms.username = ?
+            WHERE ms.last_read_msg_id IS NULL OR m.id > ms.last_read_msg_id;
+            """;
 
         List<Map<String, Object>> result = ServiceUtility.executeQuery(query, username);
 
         List<String> unreadChannels = new ArrayList<>();
-        for(Map<String, Object> row : result){
-            unreadChannels.add((String)row.get("channel_name"));
+        for (Map<String, Object> row : result) {
+            unreadChannels.add((String) row.get("channel_name"));
         }
         return unreadChannels;
     }
@@ -158,60 +149,52 @@ public class ChannelService {
     public Message getLatestMessageInChannel(String channelName) {
         // Query gets the latest message from a specific channel with only the username and role of the sender
         String query = """
-        SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
-        FROM messages m
-        JOIN users u ON m.username = u.username
-        WHERE m.channel_name = ?
-        ORDER BY m.date_time DESC
-        LIMIT 1
-        """;
-        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, channelName);
+            SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
+            FROM messages m
+            JOIN users u ON m.username = u.username
+            WHERE m.channel_name = ?
+            ORDER BY m.date_time DESC
+            LIMIT 1
+            """;
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, channelName);
         if (result.isEmpty()) {
             return null;
         }
 
         Map<String, Object> row = result.get(0);
-        User sender = new User(
-                (String) row.get("username"),
-                null, // Password set to null because it is not needed
-                User.UserRole.valueOf((String) row.get("role"))
-        );
+        User sender = new User((String) row.get("username"), null, // Password set to null because it is not needed
+            User.UserRole.valueOf((String) row.get("role")));
 
-        return new Message(
-                (int) row.get("id"),
-                (String) row.get("text"),
-                sender,
-                new Channel((String) row.get("channel_name"), null), // Channel type set to null because it is not needed
-                ((java.sql.Timestamp) row.get("date_time")).toLocalDateTime()
-        );
+        return new Message((int) row.get("id"), (String) row.get("text"), sender, new Channel((String) row.get("channel_name"), null), // Channel type set to null because it is not needed
+            ((java.sql.Timestamp) row.get("date_time")).toLocalDateTime());
     }
 
     //Get all users
     public List<User> getAllUsers() {
         System.out.println("Fetching all users from the database...");
-        List<Map<String,Object>> result = ServiceUtility.executeQuery("SELECT * FROM users");
+        List<Map<String, Object>> result = ServiceUtility.executeQuery("SELECT * FROM users");
         List<User> users = new ArrayList<>();
-        for (Map<String,Object> row : result){
-            User user = new User((String)row.get("username"), (String)row.get("password"), User.UserRole.valueOf((String)row.get("role")));
+        for (Map<String, Object> row : result) {
+            User user = new User((String) row.get("username"), (String) row.get("password"), User.UserRole.valueOf((String) row.get("role")));
             users.add(user);
         }
         return users;
     }
 
     // Get all users with matching string
-    public List<User> findUser (String input) {
-        System.out.println("Fetching all users matching string " + input );
+    public List<User> findUser(String input) {
+        System.out.println("Fetching all users matching string " + input);
 
         String query = """
-        SELECT u.username, u.role
-        FROM users u
-        WHERE LOWER(username) LIKE LOWER(?)
-        """;
+            SELECT u.username, u.role
+            FROM users u
+            WHERE LOWER(username) LIKE LOWER(?)
+            """;
         String search = "%" + input + "%";
-        List<Map<String,Object>> result = ServiceUtility.executeQuery(query, search);
+        List<Map<String, Object>> result = ServiceUtility.executeQuery(query, search);
         List<User> users = new ArrayList<>();
-        for (Map<String,Object> row : result){
-            User user = new User((String)row.get("username"), null , User.UserRole.valueOf((String)row.get("role"))); // Password set to null because it is not needed
+        for (Map<String, Object> row : result) {
+            User user = new User((String) row.get("username"), null, User.UserRole.valueOf((String) row.get("role"))); // Password set to null because it is not needed
             users.add(user);
         }
         return users;
@@ -272,9 +255,6 @@ public class ChannelService {
         String checkChannelQuery = "SELECT COUNT(*) AS count FROM channels WHERE name = ?";
         List<Map<String, Object>> result = ServiceUtility.executeQuery(checkChannelQuery, channelName);
 
-        // Debugging: Log the query result
-        // System.out.println("Query result: " + result);
-
         // If no rows are found or count is 0 the channel doesn't exist
         if (result.isEmpty() || result.get(0).get("count") == null || ((Long) result.get(0).get("count")).intValue() <= 0) {
             System.out.println("Error: Channel does not exist");
@@ -303,10 +283,12 @@ public class ChannelService {
         System.out.println("Channel deleted successfully: " + channelName);
         return rowsAffected;
     }
+
+    // Joining a channel
     public boolean joinChannel(String channelName, String username) {
         System.out.println("Trying to join channel: " + channelName);
         String sql = "INSERT INTO user_channel (username, channel_name) VALUES (?, ?)";
-        int rowsAffected = ServiceUtility.executeUpdate(sql,"Error joining the server", username, channelName);
+        int rowsAffected = ServiceUtility.executeUpdate(sql, "Error joining the server", username, channelName);
         if (rowsAffected <= 0) {
             System.out.println("Error: Failed to join channel");
             return false;
@@ -314,63 +296,6 @@ public class ChannelService {
         System.out.println(username + " joined channel successfully: " + channelName);
         return true;
     }
-
-
-//    // Default method to get data from the database
-//    List<Map<String,Object>> executeQuery(String query, Object... params){
-//        List<Map<String,Object>> result = new ArrayList<>();
-//
-//        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-//             PreparedStatement ps = connection.prepareStatement(query)){
-//            //Set query parameters
-//            for (int i = 0; i < params.length; i++){
-//                ps.setObject(i+1, params[i]);
-//            }
-//
-//            //Execute the query
-//            try (ResultSet rs = ps.executeQuery()){
-//                ResultSetMetaData metaData = rs.getMetaData();
-//                int columnCount = metaData.getColumnCount();
-//
-//                while (rs.next()){
-//                    Map<String,Object> row = new HashMap<>();
-//                    for (int i = 1; i <= columnCount; i++){
-//                        row.put(metaData.getColumnName(i), rs.getObject(i));
-//                    }
-//                    result.add(row);
-//                }
-//            }
-//
-//        }catch (SQLException e){
-//            System.out.println("Database error during query execution: [" + query + "] with " + Arrays.toString(params));
-//            e.printStackTrace();
-//        }
-//        return result;
-//    }
-//
-//    // Default method to update data in the database
-//    int executeUpdate(String query, String errorMessage, Object... params) {
-//        int rowsAffected = 0;
-//
-//        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-//             PreparedStatement ps = connection.prepareStatement(query)) {
-//
-//            // Bind parameters
-//            for (int i = 0; i < params.length; i++) {
-//                ps.setObject(i + 1, params[i]);
-//            }
-//
-//            // Execute update and return affected rows
-//            rowsAffected = ps.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            System.err.println(errorMessage);
-//            e.printStackTrace();
-//        }
-//
-//        return rowsAffected;
-//    }
-
 
     // Creating a channel
     public int createDMChannel(String channelName, String user1, String user2) {
@@ -400,7 +325,7 @@ public class ChannelService {
         String addUser2ToChannelQuery = "INSERT INTO user_channel (username, channel_name) VALUES (?, ?)";
         ServiceUtility.executeUpdate(addUser2ToChannelQuery, "Error adding user to channel", user2, channelName);
 
-        System.out.println("DM Channel created successfully added both users: " + user1+ " and " + user2);
+        System.out.println("DM Channel created successfully added both users: " + user1 + " and " + user2);
         return rowsAffected;
     }
 

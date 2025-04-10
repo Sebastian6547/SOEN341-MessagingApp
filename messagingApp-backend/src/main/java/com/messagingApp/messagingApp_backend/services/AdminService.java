@@ -1,14 +1,9 @@
 package com.messagingApp.messagingApp_backend.services;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-
-import java.sql.*;
-import java.util.*;
 
 
 @Service
@@ -45,6 +40,7 @@ public class AdminService {
         }
     }
 
+    // Deleting a message
     public boolean deleteMessage(Long msgId) {
         System.out.println("Received message delete request for id " + msgId);
         System.out.println("User is an admin. Deleting this message.");

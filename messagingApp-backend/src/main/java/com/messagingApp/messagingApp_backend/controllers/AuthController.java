@@ -33,7 +33,7 @@ public class AuthController {
 
     // Check logged in user
     @GetMapping("/check")
-    public ResponseEntity<?> getLoggedInUser (HttpSession session) {
+    public ResponseEntity<?> getLoggedInUser(HttpSession session) {
         String loggedInUser = authService.getLoggedInUser(session);
         if (loggedInUser != null) {
             return ResponseEntity.ok(Map.of("username", loggedInUser));

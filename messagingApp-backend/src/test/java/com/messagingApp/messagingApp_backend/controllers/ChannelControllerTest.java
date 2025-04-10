@@ -1,10 +1,10 @@
 package com.messagingApp.messagingApp_backend.controllers;
 
-import com.messagingApp.messagingApp_backend.services.ChannelService;
-import com.messagingApp.messagingApp_backend.services.AuthService;
 import com.messagingApp.messagingApp_backend.models.Channel;
 import com.messagingApp.messagingApp_backend.models.Message;
 import com.messagingApp.messagingApp_backend.models.User;
+import com.messagingApp.messagingApp_backend.services.AuthService;
+import com.messagingApp.messagingApp_backend.services.ChannelService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +14,13 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ChannelController.class)
 @ActiveProfiles("test")
@@ -50,16 +48,10 @@ public class ChannelControllerTest {
         Mockito.when(channelService.getAllChannels()).thenReturn(List.of(mockChannel));
         Mockito.when(channelService.getUserChannels("testUser")).thenReturn(List.of(mockChannel));
         Mockito.when(channelService.getUsersInChannel("General")).thenReturn(List.of(mockUser));
-        Mockito.when(channelService.getMessagesInChannel("General")).thenReturn(List.of(
-                new Message(1, "Hello", mockUser, mockChannel, LocalDateTime.now())
-        ));
+        Mockito.when(channelService.getMessagesInChannel("General")).thenReturn(List.of(new Message(1, "Hello", mockUser, mockChannel, LocalDateTime.now())));
 
         // Perform the request
-        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.channels[0].name").value("General"))
-                .andExpect(jsonPath("$.users[0].username").value("testUser"))
-                .andExpect(jsonPath("$.messages[0].content").value("Hello"));
+        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.channels[0].name").value("General")).andExpect(jsonPath("$.users[0].username").value("testUser")).andExpect(jsonPath("$.messages[0].content").value("Hello"));
     }
 
     @Test
@@ -68,8 +60,7 @@ public class ChannelControllerTest {
         MockHttpSession session = new MockHttpSession();
 
         // Perform the request without setting "username" in session
-        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -85,8 +76,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.getUserChannels("testUser")).thenReturn(List.of()); // No channels returned
 
         // Perform the request
-        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
     }
 
     @Test
@@ -98,13 +88,10 @@ public class ChannelControllerTest {
         // Simulate channel list that doesn't include "General"
         Mockito.when(authService.getLoggedInUser(session)).thenReturn("testUser");
         Mockito.when(channelService.getAllChannels()).thenReturn(List.of()); // No channels returned
-        Mockito.when(channelService.getUserChannels("testUser")).thenReturn(List.of(
-                new Channel("General", Channel.ChannelType.PC)
-        ));
+        Mockito.when(channelService.getUserChannels("testUser")).thenReturn(List.of(new Channel("General", Channel.ChannelType.PC)));
 
         // Perform the request
-        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/channel/General").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -119,18 +106,13 @@ public class ChannelControllerTest {
         Mockito.doNothing().when(channelService).sendMessage("General", "Hello world", "testUser");
 
         // JSON request body
-        String requestBody =
-        """
-            {
-                "text": "Hello world"
-            }
-        """;
+        String requestBody = """
+                {
+                    "text": "Hello world"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/General/sendMessage")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/channel/General/sendMessage").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isOk());
     }
 
     @Test
@@ -144,18 +126,13 @@ public class ChannelControllerTest {
         Mockito.doNothing().when(channelService).sendMessage("General", "Hello world", "testUser");
 
         // JSON request body
-        String requestBody =
-                """
-                    {
-                        "text": "Hello world"
-                    }
-                """;
+        String requestBody = """
+                {
+                    "text": "Hello world"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/General/sendMessage")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/channel/General/sendMessage").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isForbidden());
     }
 
     @Test
@@ -174,10 +151,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.getLatestMessageInChannel("General")).thenReturn(mockMessage);
 
         // Perform the GET request
-        mockMvc.perform(get("/api/channel/General/latest").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value("Latest message"))
-                .andExpect(jsonPath("$.sender.username").value("testUser"));
+        mockMvc.perform(get("/api/channel/General/latest").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.content").value("Latest message")).andExpect(jsonPath("$.sender.username").value("testUser"));
     }
 
     @Test
@@ -193,9 +167,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.getLatestMessageInChannel("General")).thenReturn(null);
 
         // Perform the GET request
-        mockMvc.perform(get("/api/channel/General/latest").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("No messages yet"));
+        mockMvc.perform(get("/api/channel/General/latest").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("No messages yet"));
     }
 
     @Test
@@ -210,10 +182,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.getAllUsers()).thenReturn(List.of(mockUser));
 
         // Perform GET request
-        mockMvc.perform(get("/api/channel/users").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("testUser"))
-                .andExpect(jsonPath("$[0].role").value("MEMBER"));
+        mockMvc.perform(get("/api/channel/users").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$[0].username").value("testUser")).andExpect(jsonPath("$[0].role").value("MEMBER"));
     }
 
     @Test
@@ -222,8 +191,7 @@ public class ChannelControllerTest {
         MockHttpSession session = new MockHttpSession();
 
         // Perform GET request
-        mockMvc.perform(get("/api/channel/users").session(session).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/channel/users").session(session).accept(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -233,9 +201,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.getAdminsCountForChannel("General")).thenReturn(5);
 
         // Perform GET request
-        mockMvc.perform(get("/api/channel/admins-count/General").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.adminsCount").value(5));
+        mockMvc.perform(get("/api/channel/admins-count/General").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.adminsCount").value(5));
     }
 
     @Test
@@ -249,20 +215,14 @@ public class ChannelControllerTest {
         Mockito.when(channelService.createChannel("General", "testUser")).thenReturn(1);
 
         // JSON request body
-        String requestBody =
-                """
-                    {
-                        "formattedChannelName": "General",
-                        "loggedUser": "testUser"
-                    }
-                """;
+        String requestBody = """
+                {
+                    "formattedChannelName": "General",
+                    "loggedUser": "testUser"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/create-channel")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Channel created successfully"));
+        mockMvc.perform(post("/api/channel/create-channel").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Channel created successfully"));
     }
 
     @Test
@@ -271,8 +231,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.deleteChannel("General")).thenReturn(1);
 
         // Perform the DELETE request
-        mockMvc.perform(delete("/api/channel/delete-channel/General").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mockMvc.perform(delete("/api/channel/delete-channel/General").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
@@ -281,9 +240,7 @@ public class ChannelControllerTest {
         Mockito.when(channelService.deleteChannel("NonExistentChannel")).thenReturn(0);
 
         // Perform the DELETE request
-        mockMvc.perform(delete("/api/channel/delete-channel/NonExistentChannel")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
+        mockMvc.perform(delete("/api/channel/delete-channel/NonExistentChannel").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -297,18 +254,13 @@ public class ChannelControllerTest {
         Mockito.when(channelService.joinChannel("General", "testUser")).thenReturn(true);
 
         // JSON request body
-        String requestBody =
-                """
-                    {
-                        "formattedChannelName": "General"
-                    }
-                """;
+        String requestBody = """
+                {
+                    "formattedChannelName": "General"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/join")
-                .session(session)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/channel/join").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isOk());
     }
 
     @Test
@@ -322,18 +274,13 @@ public class ChannelControllerTest {
         Mockito.when(channelService.joinChannel("NonExistentChannel", "testUser")).thenReturn(false);
 
         // JSON request body
-        String requestBody =
-                """
-                    {
-                        "formattedChannelName": "NonExistentChannel"
-                    }
-                """;
+        String requestBody = """
+                {
+                    "formattedChannelName": "NonExistentChannel"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/join")
-                 .session(session)
-                 .contentType(MediaType.APPLICATION_JSON)
-                 .content(requestBody))
-                .andExpect(status().isInternalServerError());
+        mockMvc.perform(post("/api/channel/join").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -348,12 +295,7 @@ public class ChannelControllerTest {
         Mockito.when(authService.getLoggedInUser(session)).thenReturn("testUser");
         Mockito.when(channelService.findUser("test")).thenReturn(List.of(mockUser));
 
-        mockMvc.perform(get("/api/channel/users/search")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("query", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("testUser"));
+        mockMvc.perform(get("/api/channel/users/search").session(session).contentType(MediaType.APPLICATION_JSON).param("query", "test")).andExpect(status().isOk()).andExpect(jsonPath("$[0].username").value("testUser"));
     }
 
     @Test
@@ -366,11 +308,7 @@ public class ChannelControllerTest {
         Mockito.when(authService.getLoggedInUser(session)).thenReturn("testUser");
         Mockito.when(channelService.findUser("test")).thenReturn(List.of()); // No users found
 
-        mockMvc.perform(get("/api/channel/users/search")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("query", "test"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/channel/users/search").session(session).contentType(MediaType.APPLICATION_JSON).param("query", "test")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -384,21 +322,15 @@ public class ChannelControllerTest {
         Mockito.when(channelService.createDMChannel("testUser1-testUser2", "testUser1", "testUser2")).thenReturn(1);
 
         // JSON request body
-        String requestBody =
-                """
-                    {
-                        "user1": "testUser1",
-                        "user2": "testUser2",
-                        "channelName": "testUser1-testUser2"
-                    }
-                """;
+        String requestBody = """
+                {
+                    "user1": "testUser1",
+                    "user2": "testUser2",
+                    "channelName": "testUser1-testUser2"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/create-dm-channel")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Channel created successfully"));
+        mockMvc.perform(post("/api/channel/create-dm-channel").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Channel created successfully"));
     }
 
     @Test
@@ -407,19 +339,14 @@ public class ChannelControllerTest {
         MockHttpSession session = new MockHttpSession();
 
         // JSON request body
-        String requestBody =
-                """
-                    {
-                        "user1": "testUser1",
-                        "user2": "testUser2",
-                        "channelName": "testUser1-testUser2"
-                    }
-                """;
+        String requestBody = """
+                {
+                    "user1": "testUser1",
+                    "user2": "testUser2",
+                    "channelName": "testUser1-testUser2"
+                }
+            """;
 
-        mockMvc.perform(post("/api/channel/create-dm-channel")
-                        .session(session)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/channel/create-dm-channel").session(session).contentType(MediaType.APPLICATION_JSON).content(requestBody)).andExpect(status().isUnauthorized());
     }
 }

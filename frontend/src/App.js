@@ -12,7 +12,7 @@ import SignupPage from "./pages/SignupPage";
 import ChannelPage from "./pages/ChannelPage.js";
 
 function App() {
-  const [username, setUsername] = useState(null);
+  const [, setUsername] = useState(null);
 
   return (
     <Router>
@@ -30,7 +30,6 @@ const AppRoutes = ({ setUsername }) => {
     axios
       .get("http://localhost:8080/api/auth/check", { withCredentials: true })
       .then((response) => {
-        console.log("Session found:", response.data);
         setUsername(response.data.username);
         navigate("/channel/General"); // Redirect if session exists
       })
@@ -44,7 +43,6 @@ const AppRoutes = ({ setUsername }) => {
       <Route path="/" element={<LoginPage />} />
       <Route path="/channel/:channelName" element={<ChannelPage />} />
       <Route path="/signup" element={<SignupPage />} />
-      {/* Add more routes here */}
     </Routes>
   );
 };

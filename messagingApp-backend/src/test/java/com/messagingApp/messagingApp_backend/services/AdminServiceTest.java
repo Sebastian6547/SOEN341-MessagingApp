@@ -20,14 +20,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestPropertySource(locations = "classpath:application-test.properties")
 public class AdminServiceTest {
 
-    @Autowired
-    ChannelService channelService = new ChannelService();
-
-    @Autowired
-    AdminService adminService = new AdminService(channelService);
-
     private final String sampleMemberName = "member";
     private final String sampleAdminName = "admin";
+
+    @Autowired
+    ChannelService channelService = new ChannelService();
+    @Autowired
+    AdminService adminService = new AdminService(channelService);
     String getMessageId = "SELECT id FROM messages WHERE username = ? AND id = ?";
 
     @Autowired
@@ -86,6 +85,7 @@ public class AdminServiceTest {
         adminService.updateUserRole(sampleAdminName, sampleAdminName, "ADMIN");
         assertTrue(adminService.isAdmin(sampleAdminName), "SampleUser is still admin");
     }
+
     @Test
     void updateUserRoleFromAdminToMember() {
         // Check if currently Admin
@@ -105,7 +105,7 @@ public class AdminServiceTest {
     }
 
     @Test
-    void updateUserRoleRejectNonAdmin(){
+    void updateUserRoleRejectNonAdmin() {
         // Getting the number of row affected
         int rowAffected = adminService.updateUserRole(sampleMemberName, sampleMemberName, "MEMBER");
         assertFalse(rowAffected > 0, "Update should not executed when not admin request");
@@ -113,7 +113,7 @@ public class AdminServiceTest {
 
     @Test
     void deleteMessageExistingMessage() {// Getting the inserted sample message id
-        List<Map<String,Object>> results = ServiceUtility.executeQuery(getMessageId, sampleMemberName, 1);
+        List<Map<String, Object>> results = ServiceUtility.executeQuery(getMessageId, sampleMemberName, 1);
         assertFalse(results.isEmpty(), "Message should exist");
         // Deleting the message
         assertTrue(adminService.deleteMessage(1L), "Deleting message should return true");
@@ -123,6 +123,7 @@ public class AdminServiceTest {
 
 
     }
+
     @Test
     void deleteMessageNonExistingMessage() {
         ServiceUtility.executeQuery(getMessageId, sampleMemberName, 1);

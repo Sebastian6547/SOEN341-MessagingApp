@@ -1,0 +1,48 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",  // Use recommended ESLint rules as a base
+    "plugin:react/recommended"  // Include recommended React rules
+  ],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true  // Enable JSX parsing
+    },
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "filenames"
+  ],
+  "rules": {
+    // Custom Rules
+    "react/prop-types": "off", // No need to specify props type
+    "no-console": "off",  // Allow console statements
+    "react/jsx-filename-extension": [
+      "warn",
+      { "extensions": [".js", ".jsx"] }  // Allow JSX in both .js and .jsx files
+    ],
+    "react/function-component-definition": [
+      "off"
+    ], // Allow arrow function and function declaration
+    "quotes": ["error", "double"],  // Use single quotes for strings
+    "semi": ["error", "always"],  // Always have semicolons
+    "indent": ["error", 2],  // Use 2 spaces for indentation
+    "no-unused-vars": ["warn"],  // Warning for unused variables
+    "filenames/match-regex": [ // Always have PascalCase names for files, except for index.js
+      "error",
+      "^(index|LoginPage.test|setupTests|[A-Z][a-zA-Z0-9]*)$",
+      true
+    ],
+    "curly": ["error", "all"] // Always have {} for control statements
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
