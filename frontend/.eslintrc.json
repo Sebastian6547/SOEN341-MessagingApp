@@ -35,7 +35,7 @@
     "no-unused-vars": ["warn"],  // Warning for unused variables
     "filenames/match-regex": [ // Always have PascalCase names for files, except for index.js
       "error",
-      "^(index|LoginPage.test|[A-Z][a-zA-Z0-9]*)$",
+      "^(index|LoginPage.test|setupTests|[A-Z][a-zA-Z0-9]*)$",
       true
     ],
     "curly": ["error", "all"] // Always have {} for control statements
