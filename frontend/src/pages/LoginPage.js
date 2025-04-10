@@ -72,7 +72,7 @@ const LoginPage = () => {
         {/* Display the error message only if there is an error */}
       </div>
       <div className="signup-container">
-        <p>Don't have an account yet?</p>
+        <p>Don&apos;t have an account yet?</p>
         <p>
           <br />
         </p>

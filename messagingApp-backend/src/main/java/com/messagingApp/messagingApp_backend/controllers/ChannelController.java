@@ -10,10 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/channel")
@@ -35,7 +35,7 @@ public class ChannelController {
         if (username == null) {
             return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
         }
-        System.out.println("REQUEST by User: " + username+ " for channel: " + channelName);
+        System.out.println("REQUEST by User: " + username + " for channel: " + channelName);
 
         //Check channel exists
         List<Channel> channels = channelService.getAllChannels();
@@ -56,11 +56,10 @@ public class ChannelController {
         List<Message> messages = channelService.getMessagesInChannel(channelName);
         Long lastMessageID = channelService.getLastSeenMsg(username, channelName);
 
-        return ResponseEntity.ok(Map.of(
-                "channels", userChannels, // All channels the user is in
-                "users", users, // Users in the selected channel
-                "messages", messages, // Messages in the selected channel
-                "lastMessageID", lastMessageID //Last seen message by loggedin User
+        return ResponseEntity.ok(Map.of("channels", userChannels, // All channels the user is in
+            "users", users, // Users in the selected channel
+            "messages", messages, // Messages in the selected channel
+            "lastMessageID", lastMessageID //Last seen message by loggedin User
         ));
     }
 
@@ -115,19 +114,6 @@ public class ChannelController {
         return ResponseEntity.ok(latestMessage);
     }
 
-    //get from all channels
-//    @GetMapping("/channels")
-//    public ResponseEntity<?> getAllChannels(HttpSession session){
-//        //Check user is logged in
-//        String username = authService.getLoggedInUser(session);
-//        if (username == null) {
-//            return ResponseEntity.status(401).body(Map.of("error", "User not logged in"));
-//        }
-//
-//        //Get all channels
-//        List<Channel> channels = channelService.getAllChannels();
-//        return ResponseEntity.ok(channels);
-//    }
     // Get all users
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(HttpSession session) {
@@ -181,6 +167,7 @@ public class ChannelController {
         }
     }
 
+    // Joining a channel
     @PostMapping("/join")
     public ResponseEntity<?> joinChannel(@RequestBody Map<String, String> channelData, HttpSession session) {
         String username = authService.getLoggedInUser(session);
@@ -199,9 +186,7 @@ public class ChannelController {
         }
     }
 
-
-
-    //get users from a search input
+    // Get users from a search input
     @GetMapping("/users/search")
     public ResponseEntity<?> searchUsers(HttpSession session, @RequestParam String query) {
         //check user logged in
@@ -212,17 +197,15 @@ public class ChannelController {
         //get users based off search
         List<User> matchUsers = channelService.findUser(query);
 
-        if(matchUsers.size() == 0) {
+        if (matchUsers.size() == 0) {
             return ResponseEntity.status(404).body(Map.of("error", "no matching users found"));
         }
         return ResponseEntity.ok(matchUsers);
     }
 
+    // Update the last seen messages
     @PostMapping("/{channelName}/updateLastSeenMessage")
-    public ResponseEntity<String> updateLastSeenMessage(
-            @PathVariable String channelName,
-            HttpSession session,
-            @RequestBody Map<String, Object> messageData){
+    public ResponseEntity<String> updateLastSeenMessage(@PathVariable String channelName, HttpSession session, @RequestBody Map<String, Object> messageData) {
         try {
             String username = authService.getLoggedInUser(session);
             Long lastSeenMessageID = ((Number) messageData.get("lastSeenMessageID")).longValue();
@@ -230,18 +213,18 @@ public class ChannelController {
             channelService.updateMessageSeenTable(username, channelName, lastSeenMessageID);
             return ResponseEntity.ok("Last seen message updated successfully.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error updating last seen message: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating last seen message: " + e.getMessage());
         }
     }
 
+    // Get channels with unread messages
     @GetMapping("/getUnreadChannels")
-    public ResponseEntity<List<String>> getUnreadChannels(HttpSession session){
-        try{
+    public ResponseEntity<List<String>> getUnreadChannels(HttpSession session) {
+        try {
             String username = authService.getLoggedInUser(session);
             List<String> unreadChannels = channelService.getUnreadChannels(username);
             return ResponseEntity.ok(unreadChannels);
-        }catch(Exception err){
+        } catch (Exception err) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
         }
     }

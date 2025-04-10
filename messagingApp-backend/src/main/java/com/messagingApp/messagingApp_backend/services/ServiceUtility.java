@@ -8,9 +8,7 @@ import java.util.*;
 public class ServiceUtility {
 
     // Load .env variables
-    private static final Dotenv dotenv = Dotenv.configure()
-            .ignoreIfMissing()
-            .load();
+    private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
     private static final String DB_URL = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : dotenv.get("DB_URL");
     private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : dotenv.get("DB_USER");
@@ -23,31 +21,30 @@ public class ServiceUtility {
     }
 
     // Default method to get data from the database
-    static List<Map<String,Object>> executeQuery(String query, Object... params){
-        List<Map<String,Object>> result = new ArrayList<>();
+    static List<Map<String, Object>> executeQuery(String query, Object... params) {
+        List<Map<String, Object>> result = new ArrayList<>();
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement ps = connection.prepareStatement(query)){
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD); PreparedStatement ps = connection.prepareStatement(query)) {
             //Set query parameters
-            for (int i = 0; i < params.length; i++){
-                ps.setObject(i+1, params[i]);
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
             }
 
             //Execute the query
-            try (ResultSet rs = ps.executeQuery()){
+            try (ResultSet rs = ps.executeQuery()) {
                 ResultSetMetaData metaData = rs.getMetaData();
                 int columnCount = metaData.getColumnCount();
 
-                while (rs.next()){
-                    Map<String,Object> row = new HashMap<>();
-                    for (int i = 1; i <= columnCount; i++){
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    for (int i = 1; i <= columnCount; i++) {
                         row.put(metaData.getColumnName(i), rs.getObject(i));
                     }
                     result.add(row);
                 }
             }
 
-        }catch (SQLException e){
+        } catch (SQLException e) {
             System.out.println("Database error during query execution: [" + query + "] with " + Arrays.toString(params));
             e.printStackTrace();
         }
@@ -58,8 +55,7 @@ public class ServiceUtility {
     static int executeUpdate(String query, String errorMessage, Object... params) {
         int rowsAffected = 0;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement ps = connection.prepareStatement(query)) {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD); PreparedStatement ps = connection.prepareStatement(query)) {
 
             // Bind parameters
             for (int i = 0; i < params.length; i++) {

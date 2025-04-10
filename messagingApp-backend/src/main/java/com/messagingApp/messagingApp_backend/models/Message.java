@@ -3,13 +3,13 @@ package com.messagingApp.messagingApp_backend.models;
 import java.time.LocalDateTime;
 
 public class Message {
-    private long id;
-    private String content;
-    private User sender;
-    private Channel channel;
-    private LocalDateTime timestamp;
+    private final long id;
+    private final String content;
+    private final User sender;
+    private final Channel channel;
+    private final LocalDateTime timestamp;
 
-    public Message(long id,String content, User sender, Channel channel, LocalDateTime timestamp) {
+    public Message(long id, String content, User sender, Channel channel, LocalDateTime timestamp) {
         this.id = id;
         this.content = content;
         this.sender = sender;

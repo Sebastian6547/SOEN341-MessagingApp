@@ -1,17 +1,16 @@
 package com.messagingApp.messagingApp_backend.services;
 
-import org.springframework.stereotype.Service;
-import jakarta.servlet.http.HttpSession;
-import java.sql.*;
 import io.github.cdimascio.dotenv.Dotenv;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.stereotype.Service;
+
+import java.sql.*;
 
 @Service
 public class AuthService {
 
     // Load .env variables
-    private static final Dotenv dotenv = Dotenv.configure()
-            .ignoreIfMissing()
-            .load();
+    private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
     private static final String DB_URL = System.getenv("DB_URL") != null ? System.getenv("DB_URL") : dotenv.get("DB_URL");
     private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : dotenv.get("DB_USER");
@@ -35,8 +34,7 @@ public class AuthService {
 
         String sql = "SELECT password FROM users WHERE username = ?";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             Statement statement = connection.createStatement()) {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD); Statement statement = connection.createStatement()) {
 
             // Set the role to postgres before executing any other SQL commands
             statement.execute("SET ROLE postgres;");
@@ -85,7 +83,7 @@ public class AuthService {
     }
 
     // User creation helper method
-    public void createUser(String username, String password, String role){
+    public void createUser(String username, String password, String role) {
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
 
         // Execute the query

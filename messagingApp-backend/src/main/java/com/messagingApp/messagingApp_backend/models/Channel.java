@@ -3,13 +3,8 @@ package com.messagingApp.messagingApp_backend.models;
 import java.util.List;
 
 public class Channel {
-    public enum ChannelType {
-        PC, // Public Channel
-        DM  // Direct Message
-    }
-
-    private String name;
-    private ChannelType type;
+    private final String name;
+    private final ChannelType type;
     private List<User> members;
 
     public Channel(String name, ChannelType type) {
@@ -39,5 +34,10 @@ public class Channel {
 
     public void removeMember(User user) {
         this.members.remove(user);
+    }
+
+    public enum ChannelType {
+        PC, // Public Channel
+        DM  // Direct Message
     }
 }

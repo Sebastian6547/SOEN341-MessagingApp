@@ -3,26 +3,24 @@ package com.messagingApp.messagingApp_backend.services;
 import com.messagingApp.messagingApp_backend.models.Channel;
 import com.messagingApp.messagingApp_backend.models.Message;
 import com.messagingApp.messagingApp_backend.models.User;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.sql.Timestamp;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
 public class ChannelServiceTest {
@@ -46,8 +44,7 @@ public class ChannelServiceTest {
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq("SELECT * FROM channels")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq("SELECT * FROM channels"))).thenReturn(resultData);
 
             // Call the method under test
             List<Channel> channels = channelService.getAllChannels();
@@ -70,16 +67,15 @@ public class ChannelServiceTest {
         resultData.add(row);
 
         String query = """
-        SELECT uc.username, uc.channel_name, c.type
-        FROM user_channel uc
-        JOIN channels c ON uc.channel_name = c.name
-        WHERE uc.username = ?
-        """;
+            SELECT uc.username, uc.channel_name, c.type
+            FROM user_channel uc
+            JOIN channels c ON uc.channel_name = c.name
+            WHERE uc.username = ?
+            """;
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("testUser")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("testUser"))).thenReturn(resultData);
 
             // Call the method under test
             List<Channel> channels = channelService.getUserChannels("testUser");
@@ -101,16 +97,15 @@ public class ChannelServiceTest {
         resultData.add(row);
 
         String query = """
-        SELECT uc.username, u.role
-        FROM user_channel uc
-        JOIN users u ON uc.username = u.username
-        WHERE uc.channel_name = ?
-        """;
+            SELECT uc.username, u.role
+            FROM user_channel uc
+            JOIN users u ON uc.username = u.username
+            WHERE uc.channel_name = ?
+            """;
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("General")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("General"))).thenReturn(resultData);
 
             // Call the method under test
             List<User> users = channelService.getUsersInChannel("General");
@@ -136,16 +131,15 @@ public class ChannelServiceTest {
         resultData.add(row);
 
         String query = """
-        SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
-        FROM messages m
-        JOIN users u ON m.username = u.username
-        WHERE m.channel_name = ?
-        """;
+            SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
+            FROM messages m
+            JOIN users u ON m.username = u.username
+            WHERE m.channel_name = ?
+            """;
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("General")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("General"))).thenReturn(resultData);
 
             // Call the method under test
             List<Message> messages = channelService.getMessagesInChannel("General");
@@ -172,18 +166,17 @@ public class ChannelServiceTest {
         resultData.add(row);
 
         String query = """
-        SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
-        FROM messages m
-        JOIN users u ON m.username = u.username
-        WHERE m.channel_name = ?
-        ORDER BY m.date_time DESC
-        LIMIT 1
-        """;
+            SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
+            FROM messages m
+            JOIN users u ON m.username = u.username
+            WHERE m.channel_name = ?
+            ORDER BY m.date_time DESC
+            LIMIT 1
+            """;
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("General")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("General"))).thenReturn(resultData);
 
             // Call the method under test
             Message message = channelService.getLatestMessageInChannel("General");
@@ -202,18 +195,17 @@ public class ChannelServiceTest {
         List<Map<String, Object>> resultData = new ArrayList<>();
 
         String query = """
-        SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
-        FROM messages m
-        JOIN users u ON m.username = u.username
-        WHERE m.channel_name = ?
-        ORDER BY m.date_time DESC
-        LIMIT 1
-        """;
+            SELECT m.id, m.text, m.date_time, m.channel_name, u.username, u.role
+            FROM messages m
+            JOIN users u ON m.username = u.username
+            WHERE m.channel_name = ?
+            ORDER BY m.date_time DESC
+            LIMIT 1
+            """;
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("EmptyChannel")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("EmptyChannel"))).thenReturn(resultData);
 
             // Call the method under test
             Message message = channelService.getLatestMessageInChannel("EmptyChannel");
@@ -235,8 +227,7 @@ public class ChannelServiceTest {
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq("SELECT * FROM users")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq("SELECT * FROM users"))).thenReturn(resultData);
 
             // Call the method under test
             List<User> users = channelService.getAllUsers();
@@ -259,15 +250,14 @@ public class ChannelServiceTest {
         resultData.add(row);
 
         String query = """
-        SELECT u.username, u.role
-        FROM users u
-        WHERE LOWER(username) LIKE LOWER(?)
-        """;
+            SELECT u.username, u.role
+            FROM users u
+            WHERE LOWER(username) LIKE LOWER(?)
+            """;
 
         // Mock the static executeQuery method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("%test%")))
-                    .thenReturn(resultData);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(query), eq("%test%"))).thenReturn(resultData);
 
             // Call the method under test
             List<User> users = channelService.findUser("test");
@@ -309,26 +299,13 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(query),
-                            eq("Error sending message to channel"),
-                            eq(content),
-                            eq(sender),
-                            eq(channelName),
-                            any(Timestamp.class)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(query), eq("Error sending message to channel"), eq(content), eq(sender), eq(channelName), any(Timestamp.class))).thenReturn(1);
 
             // Call the method under test
             channelService.sendMessage(channelName, content, sender);
 
             // Verify the method was called
-            mockedStatic.verify(() -> ServiceUtility.executeUpdate(
-                    eq(query),
-                    eq("Error sending message to channel"),
-                    eq(content),
-                    eq(sender),
-                    eq(channelName),
-                    any(Timestamp.class)));
+            mockedStatic.verify(() -> ServiceUtility.executeUpdate(eq(query), eq("Error sending message to channel"), eq(content), eq(sender), eq(channelName), any(Timestamp.class)));
         }
     }
 
@@ -343,18 +320,9 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(createChannelQuery),
-                            eq("Error inserting channel"),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(createChannelQuery), eq("Error inserting channel"), eq(channelName))).thenReturn(1);
 
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(addUserToChannelQuery),
-                            eq("Error adding user to channel"),
-                            eq(creatorUsername),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(addUserToChannelQuery), eq("Error adding user to channel"), eq(creatorUsername), eq(channelName))).thenReturn(1);
 
             // Call the method under test
             int result = channelService.createChannel(channelName, creatorUsername);
@@ -387,11 +355,7 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(createChannelQuery),
-                            eq("Error inserting channel"),
-                            eq(channelName)))
-                    .thenReturn(0);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(createChannelQuery), eq("Error inserting channel"), eq(channelName))).thenReturn(0);
 
             // Call the method under test
             int result = channelService.createChannel(channelName, creatorUsername);
@@ -418,20 +382,11 @@ public class ChannelServiceTest {
 
         // Mock the static methods
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(checkChannelQuery), eq(channelName)))
-                    .thenReturn(checkResult);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(checkChannelQuery), eq(channelName))).thenReturn(checkResult);
 
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(deleteUserChannelQuery),
-                            eq("Error deleting from user_channel"),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(deleteUserChannelQuery), eq("Error deleting from user_channel"), eq(channelName))).thenReturn(1);
 
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(deleteChannelQuery),
-                            eq("Error deleting channel"),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(deleteChannelQuery), eq("Error deleting channel"), eq(channelName))).thenReturn(1);
 
             // Call the method under test
             int result = channelService.deleteChannel(channelName);
@@ -456,8 +411,7 @@ public class ChannelServiceTest {
 
         // Mock the static methods
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(checkChannelQuery), eq(channelName)))
-                    .thenReturn(checkResult);
+            mockedStatic.when(() -> ServiceUtility.executeQuery(eq(checkChannelQuery), eq(channelName))).thenReturn(checkResult);
 
             // Call the method under test
             int result = channelService.deleteChannel(channelName);
@@ -477,12 +431,7 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(sql),
-                            eq("Error joining the server"),
-                            eq(username),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(sql), eq("Error joining the server"), eq(username), eq(channelName))).thenReturn(1);
 
             // Call the method under test
             boolean result = channelService.joinChannel(channelName, username);
@@ -502,12 +451,7 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(sql),
-                            eq("Error joining the server"),
-                            eq(username),
-                            eq(channelName)))
-                    .thenReturn(0);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(sql), eq("Error joining the server"), eq(username), eq(channelName))).thenReturn(0);
 
             // Call the method under test
             boolean result = channelService.joinChannel(channelName, username);
@@ -529,25 +473,11 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(createChannelQuery),
-                            eq("Error inserting channel"),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(createChannelQuery), eq("Error inserting channel"), eq(channelName))).thenReturn(1);
 
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(addUserToChannelQuery),
-                            eq("Error adding user to channel"),
-                            eq(user1),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(addUserToChannelQuery), eq("Error adding user to channel"), eq(user1), eq(channelName))).thenReturn(1);
 
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(addUserToChannelQuery),
-                            eq("Error adding user to channel"),
-                            eq(user2),
-                            eq(channelName)))
-                    .thenReturn(1);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(addUserToChannelQuery), eq("Error adding user to channel"), eq(user2), eq(channelName))).thenReturn(1);
 
             // Call the method under test
             int result = channelService.createDMChannel(channelName, user1, user2);
@@ -596,11 +526,7 @@ public class ChannelServiceTest {
 
         // Mock the static executeUpdate method
         try (MockedStatic<ServiceUtility> mockedStatic = Mockito.mockStatic(ServiceUtility.class)) {
-            mockedStatic.when(() -> ServiceUtility.executeUpdate(
-                            eq(createChannelQuery),
-                            eq("Error inserting channel"),
-                            eq(channelName)))
-                    .thenReturn(0);
+            mockedStatic.when(() -> ServiceUtility.executeUpdate(eq(createChannelQuery), eq("Error inserting channel"), eq(channelName))).thenReturn(0);
 
             // Call the method under test
             int result = channelService.createDMChannel(channelName, user1, user2);

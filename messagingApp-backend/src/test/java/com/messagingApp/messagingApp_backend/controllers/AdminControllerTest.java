@@ -10,10 +10,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @WebMvcTest(controllers = AdminController.class)
@@ -33,9 +32,7 @@ public class AdminControllerTest {
         Mockito.when(adminService.isAdmin(username)).thenReturn(true);
 
         // Act & Assert
-        mockMvc.perform(get("/api/admin/checkAdmin").accept(MediaType.APPLICATION_JSON).param("username", username))
-                .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+        mockMvc.perform(get("/api/admin/checkAdmin").accept(MediaType.APPLICATION_JSON).param("username", username)).andExpect(status().isOk()).andExpect(content().string("true"));
     }
 
     @Test
@@ -45,9 +42,7 @@ public class AdminControllerTest {
         Mockito.when(adminService.isAdmin(username)).thenReturn(false);
 
         // Act & Assert
-        mockMvc.perform(get("/api/admin/checkAdmin").accept(MediaType.APPLICATION_JSON).param("username", username))
-                .andExpect(status().isOk())
-                .andExpect(content().string("false"));
+        mockMvc.perform(get("/api/admin/checkAdmin").accept(MediaType.APPLICATION_JSON).param("username", username)).andExpect(status().isOk()).andExpect(content().string("false"));
     }
 
     @Test
@@ -60,12 +55,7 @@ public class AdminControllerTest {
         Mockito.when(adminService.updateUserRole(currentUsername, targetUsername, newRole)).thenReturn(1);
 
         // Act & Assert
-        mockMvc.perform(put("/api/admin/updateRole")
-                        .param("currentUsername", currentUsername)
-                        .param("targetUsername", targetUsername)
-                        .param("newRole", newRole))
-                .andExpect(status().isOk())
-                .andExpect(content().string("User role updated successfully."));
+        mockMvc.perform(put("/api/admin/updateRole").param("currentUsername", currentUsername).param("targetUsername", targetUsername).param("newRole", newRole)).andExpect(status().isOk()).andExpect(content().string("User role updated successfully."));
     }
 
     @Test
@@ -78,12 +68,7 @@ public class AdminControllerTest {
         Mockito.when(adminService.updateUserRole(currentUsername, targetUsername, newRole)).thenReturn(0);
 
         // Act & Assert
-        mockMvc.perform(put("/api/admin/updateRole")
-                        .param("currentUsername", currentUsername)
-                        .param("targetUsername", targetUsername)
-                        .param("newRole", newRole))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string("Permission denied or failed to update user role."));
+        mockMvc.perform(put("/api/admin/updateRole").param("currentUsername", currentUsername).param("targetUsername", targetUsername).param("newRole", newRole)).andExpect(status().isForbidden()).andExpect(content().string("Permission denied or failed to update user role."));
     }
 
     @Test
@@ -94,9 +79,7 @@ public class AdminControllerTest {
         Mockito.when(adminService.deleteMessage(messageId)).thenReturn(true);
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/deleteMessage/{messageId}", messageId))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Message deleted successfully."));
+        mockMvc.perform(delete("/api/admin/deleteMessage/{messageId}", messageId)).andExpect(status().isOk()).andExpect(content().string("Message deleted successfully."));
     }
 
     @Test
@@ -107,9 +90,7 @@ public class AdminControllerTest {
         Mockito.when(adminService.deleteMessage(messageId)).thenReturn(false);
 
         // Act & Assert
-        mockMvc.perform(delete("/api/admin/deleteMessage/{messageId}", messageId))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string("Something went wrong"));
+        mockMvc.perform(delete("/api/admin/deleteMessage/{messageId}", messageId)).andExpect(status().isForbidden()).andExpect(content().string("Something went wrong"));
     }
 
 

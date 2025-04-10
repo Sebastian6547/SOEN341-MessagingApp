@@ -18,21 +18,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestPropertySource(locations = "classpath:application-test.properties")
 public class AuthServiceTest {
 
-    @Autowired
-    private HttpSession session;
-
-    @Autowired
-    private AuthService authService;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-
     private final String sampleMemberName = "member";
     private final String sampleMemberPassword = "member";
     private final String sampleAdminName = "admin";
     private final String sampleAdminPassword = "admin";
 
+    @Autowired
+    private HttpSession session;
+    @Autowired
+    private AuthService authService;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     public void setupDatabase() {
@@ -59,7 +55,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void createUserAdmin(){
+    public void createUserAdmin() {
         // Given
         String username = "Alice";
         String password = "password";
@@ -69,17 +65,15 @@ public class AuthServiceTest {
         authService.createUser(username, password, role);
 
         /// Then
-        Integer countUsers = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
-        Integer countChannels = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
+        Integer countUsers = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
+        Integer countChannels = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
 
         assertEquals(1, countUsers);
         assertEquals(1, countChannels);
     }
 
     @Test
-    public void createUserMember(){
+    public void createUserMember() {
         // Given
         String username = "Bob";
         String password = "password";
@@ -89,16 +83,15 @@ public class AuthServiceTest {
         authService.createUser(username, password, role);
 
         /// Then
-        Integer countUsers = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
-        Integer countChannels = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
+        Integer countUsers = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
+        Integer countChannels = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
 
         assertEquals(1, countUsers);
         assertEquals(1, countChannels);
     }
+
     @Test
-    public void createUserDuplicate(){
+    public void createUserDuplicate() {
         // Given
         String username = "Bob";
         String password = "password";
@@ -107,39 +100,41 @@ public class AuthServiceTest {
         authService.createUser(username, password, role);
         authService.createUser(username, password, role);
         /// Then
-        Integer countUsers = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
-        Integer countChannels = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
+        Integer countUsers = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE username = ?", Integer.class, username);
+        Integer countChannels = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_channel WHERE username = ?", Integer.class, username);
         assertEquals(1, countUsers);
         assertEquals(1, countChannels);
     }
+
     @Test
     void authenticateUserAdmin() {
         // Ensure no logged in user
         assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
-        authService.authenticateUser(sampleAdminName,sampleAdminPassword,session);
+        authService.authenticateUser(sampleAdminName, sampleAdminPassword, session);
         assertEquals(session.getAttribute("loggedInUser"), sampleAdminName, "Should return" + sampleAdminName);
     }
+
     @Test
     void authenticateUserMember() {
         // Ensure no logged in user
         assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
-        authService.authenticateUser(sampleMemberName,sampleMemberPassword,session);
+        authService.authenticateUser(sampleMemberName, sampleMemberPassword, session);
         assertEquals(session.getAttribute("loggedInUser"), sampleMemberName, "Should return" + sampleMemberName);
     }
+
     @Test
     void authenticateUserNoGivenUsername() {
         // Ensure no logged in user
         assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
-        authService.authenticateUser("",sampleAdminPassword,session); // Wrong password
+        authService.authenticateUser("", sampleAdminPassword, session); // Wrong password
         assertNull(session.getAttribute("loggedInUser"), "Should have null loggedInUser");
     }
+
     @Test
     void authenticateUserWrongPassword() {
         // Ensure no logged in user
         assertNull(session.getAttribute("loggedInUser"), "loggedInUser should be null");
-        authService.authenticateUser(sampleMemberName,sampleAdminPassword,session); // Wrong password
+        authService.authenticateUser(sampleMemberName, sampleAdminPassword, session); // Wrong password
         assertNull(session.getAttribute("loggedInUser"), "Should have null loggedInUser");
     }
 
@@ -149,6 +144,7 @@ public class AuthServiceTest {
         session.setAttribute("loggedInUser", sampleMemberName);
         assertEquals(sampleMemberName, session.getAttribute("loggedInUser"), "Should return" + sampleMemberName);
     }
+
     @Test
     void getLoggedInUserAdmin() {
         // Set loggedInUser as sampleAdminName
@@ -164,6 +160,7 @@ public class AuthServiceTest {
         // If invalidated, it will throw Exception
         assertThrows(IllegalStateException.class, () -> session.getAttribute("loggedInUser"), "Should have been invalidated");
     }
+
     @Test
     void logoutAdmin() {
         // Set loggedInUser as sampleAdminName
@@ -172,6 +169,7 @@ public class AuthServiceTest {
         // If invalidated, it will throw Exception
         assertThrows(IllegalStateException.class, () -> session.getAttribute("loggedInUser"), "Should have been invalidated");
     }
+
     @Test
     void logoutNotLoggedIn() {
         authService.logout(session);
